@@ -1,26 +1,31 @@
-// MainMenu.qml
 import QtQuick
 import QtQuick.Controls
+import "../style" as Style
 
 Item {
     id: menuRoot
-    width: 320
-    height: column.implicitHeight
 
-    // signály pro Main.qml
+    width: parent ? parent.width : 1280
+    height: parent ? parent.height : 720
+
+    Style.Theme {
+        id: theme
+    }
+
     signal newGameRequested()
     signal settingsRequested()
     signal quitRequested()
 
     Column {
         id: column
-        anchors.horizontalCenter: parent.horizontalCenter
         spacing: 14
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Strategy Game"
-            color: "white"
+            color: theme.textPrimary
             font.pixelSize: 40
             font.bold: true
         }
@@ -28,11 +33,15 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Hlavní menu"
-            color: "#9ca3af"
+            color: theme.textSecondary
             font.pixelSize: 16
         }
 
-        Rectangle { width: 1; height: 18; color: "transparent" }
+        Rectangle {
+            width: 1
+            height: 18
+            color: "transparent"
+        }
 
         MenuButton {
             text: "Nová hra"

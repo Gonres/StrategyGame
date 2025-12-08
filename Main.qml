@@ -1,6 +1,7 @@
-// Main.qml
 import QtQuick
 import QtQuick.Controls
+import "components" as Comp
+import "style" as Style
 
 Window {
     id: root
@@ -10,73 +11,87 @@ Window {
     visibility: Window.FullScreen
     title: qsTr("Strategy Game")
 
-    // Pozadí
+    Style.Theme {
+        id: theme
+    }
+
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "#0f172a" }
-            GradientStop { position: 1.0; color: "#020617" }
+            GradientStop { position: 0; color: theme.bgTop }
+            GradientStop { position: 1; color: theme.bgBottom }
         }
     }
 
-    // Správce obrazovek
     StackView {
         id: stack
         anchors.fill: parent
-
+        focus: true
         initialItem: mainMenuComponent
-    }
 
-    // ====== Definice obrazovek jako Component ======
+        pushEnter: Transition {
+            NumberAnimation {
+                properties: "x"
+                from: stack.width
+                to: 0
+                duration: 220
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        pushExit: Transition {
+            NumberAnimation {
+                properties: "x"
+                from: 0
+                to: -stack.width * 0.25
+                duration: 180
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        popEnter: Transition {
+            NumberAnimation {
+                properties: "x"
+                from: -stack.width * 0.25
+                to: 0
+                duration: 220
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        popExit: Transition {
+            NumberAnimation {
+                properties: "x"
+                from: 0
+                to: stack.width
+                duration: 180
+                easing.type: Easing.InOutQuad
+            }
+        }
+    }
 
     Component {
         id: mainMenuComponent
-        MainMenu {
-            anchors.centerIn: parent
-
-            onNewGameRequested: {
-                stack.push(newGameMenuComponent)
-            }
-
-            onSettingsRequested: {
-                stack.push(settingsMenuComponent)
-            }
-
-            onQuitRequested: {
-                Qt.quit()
-            }
+        Comp.MainMenu {
+            onNewGameRequested: stack.push(newGameMenuComponent)
+            onSettingsRequested: stack.push(settingsMenuComponent)
+            onQuitRequested: Qt.quit()
         }
     }
 
     Component {
         id: newGameMenuComponent
-        NewGameMenu {
-            anchors.centerIn: parent
-
-            onBackRequested: {
-                stack.pop()
-            }
-
-            onHumanVsHumanRequested: {
-                console.log("Start: Člověk vs Člověk")
-                // tady později spustíš herní scénu
-            }
-
-            onHumanVsBotRequested: {
-                console.log("Start: Člověk vs Bot")
-                // tady později spustíš herní scénu
-            }
+        Comp.NewGameMenu {
+            onBackRequested: stack.pop()
+            onHumanVsHumanRequested: console.log("Start: Human vs Human")
+            onHumanVsBotRequested: console.log("Start: Human vs Bot")
         }
     }
 
     Component {
         id: settingsMenuComponent
-        SettingsMenu {
-            anchors.centerIn: parent
-
-            onBackRequested: {
-                stack.pop()
-            }
+        Comp.SettingsMenu {
+            onBackRequested: stack.pop()
         }
     }
 }

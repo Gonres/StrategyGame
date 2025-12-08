@@ -1,11 +1,16 @@
-// NewGameMenu.qml
 import QtQuick
 import QtQuick.Controls
+import "../style" as Style
 
 Item {
     id: newGameRoot
-    width: 320
-    height: column.implicitHeight
+
+    width: parent ? parent.width : 1280
+    height: parent ? parent.height : 720
+
+    Style.Theme {
+        id: theme
+    }
 
     signal backRequested()
     signal humanVsHumanRequested()
@@ -13,13 +18,14 @@ Item {
 
     Column {
         id: column
-        anchors.horizontalCenter: parent.horizontalCenter
         spacing: 14
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Nová hra"
-            color: "white"
+            color: theme.textPrimary
             font.pixelSize: 32
             font.bold: true
         }
@@ -27,11 +33,15 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Vyber režim"
-            color: "#9ca3af"
+            color: theme.textSecondary
             font.pixelSize: 16
         }
 
-        Rectangle { width: 1; height: 18; color: "transparent" }
+        Rectangle {
+            width: 1
+            height: 18
+            color: "transparent"
+        }
 
         MenuButton {
             text: "Člověk vs Člověk"
