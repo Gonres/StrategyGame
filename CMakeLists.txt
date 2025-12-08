@@ -16,6 +16,9 @@ qt_add_qml_module(appStrategyGame
     URI StrategyGame
     QML_FILES
         Main.qml
+        QML_FILES MenuButton.qml
+        QML_FILES MainMenu.qml
+        QML_FILES NewGameMenu.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
