@@ -12,9 +12,9 @@ Item {
         id: theme
     }
 
-    signal backRequested()
-    signal humanVsHumanRequested()
-    signal humanVsBotRequested()
+    signal backRequested
+    signal humanVsHumanRequested
+    signal humanVsBotRequested
 
     Column {
         id: column

@@ -12,7 +12,7 @@ Item {
         id: theme
     }
 
-    signal backRequested()
+    signal backRequested
 
     Column {
         id: column

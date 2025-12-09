@@ -18,8 +18,14 @@ Window {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: theme.bgTop }
-            GradientStop { position: 1; color: theme.bgBottom }
+            GradientStop {
+                position: 0
+                color: theme.bgTop
+            }
+            GradientStop {
+                position: 1
+                color: theme.bgBottom
+            }
         }
     }
 
@@ -75,7 +81,6 @@ Window {
         Comp.MainMenu {
             onNewGameRequested: stack.push(newGameMenuComponent)
             onSettingsRequested: stack.push(settingsMenuComponent)
-            onQuitRequested: Qt.quit()
         }
     }
 
@@ -83,7 +88,7 @@ Window {
         id: newGameMenuComponent
         Comp.NewGameMenu {
             onBackRequested: stack.pop()
-            onHumanVsHumanRequested: console.log("Start: Human vs Human")
+            onHumanVsHumanRequested: controller.startGame()
             onHumanVsBotRequested: console.log("Start: Human vs Bot")
         }
     }

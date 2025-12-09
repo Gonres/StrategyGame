@@ -12,9 +12,8 @@ Item {
         id: theme
     }
 
-    signal newGameRequested()
-    signal settingsRequested()
-    signal quitRequested()
+    signal newGameRequested
+    signal settingsRequested
 
     Column {
         id: column
@@ -55,7 +54,7 @@ Item {
 
         MenuButton {
             text: "Ukončit hru"
-            onClicked: menuRoot.quitRequested()
+            onClicked: Qt.quit()
         }
     }
 }
