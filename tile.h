@@ -6,7 +6,6 @@
 
 class Tile : public QObject{
     Q_OBJECT
-
 private:
     TileType::Type m_type;
 public:
