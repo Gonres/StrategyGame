@@ -28,6 +28,9 @@ qt_add_qml_module(appStrategyGame
         style/Theme.qml
         SOURCES
         SOURCES game_controller.h game_controller.cpp
+        SOURCES tile_type.h
+        SOURCES tile.h
+        SOURCES tile.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
