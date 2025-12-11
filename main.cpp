@@ -1,4 +1,5 @@
 #include "game_controller.h"
+#include "tile_type.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -9,6 +10,15 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
+
+    //Globalni enum
+    qmlRegisterUncreatableMetaObject(
+        TileType::staticMetaObject,
+        "StrategyGame",
+        1, 0,
+        "TileType",
+        "Error: TileType is a namespace"
+        );
 
     QQmlContext* context = engine.rootContext();
 

@@ -1,4 +1,5 @@
 #include "game_map.h"
+//#include <QDebug>
 
 GameMap::GameMap(unsigned int numberOfRows, unsigned int numberOfColumns, QObject* parent)
     : QObject(parent),
@@ -23,10 +24,56 @@ void GameMap::generateMap(){
             type = TileType::Mountain;
         }
         else if(rand<100){
-            type = TileType::Watter;
+            type = TileType::Water;
         }
-        Tile* newTile = new Tile(type);
+        Tile* newTile = new Tile(type, this);
+        //qDebug()<<"Tyle: " << newTile->getType();
         m_map.append(newTile);
     }
 }
+int GameMap::getIndex(unsigned int x, unsigned int y)const{
+    return y*m_columns +x;
+}
+bool GameMap::isValid(unsigned int x, unsigned int y)const{
+    return x >=0 && x <m_columns and y >=0 && y < m_rows;
+}
+
+int GameMap::getRows()const{
+    return m_rows;
+}
+int GameMap::getColumns()const{
+    return m_columns;
+}
+
+QList<QObject*> GameMap::getTiles() const {
+    // Transfer QVector<Tile*> to QList<QObject*>
+    QList<QObject*> list;
+    for (Tile* t : m_map) {
+        list.append(t);
+    }
+    return list;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

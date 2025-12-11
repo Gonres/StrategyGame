@@ -88,7 +88,10 @@ Window {
         id: newGameMenuComponent
         Comp.NewGameMenu {
             onBackRequested: stack.pop()
-            onHumanVsHumanRequested: controller.startGame()
+            onHumanVsHumanRequested:{
+                controller.startGame()
+                stack.push(gameScreenComponent)
+            }
             onHumanVsBotRequested: console.log("Start: Human vs Bot")
         }
     }
@@ -96,6 +99,15 @@ Window {
     Component {
         id: settingsMenuComponent
         Comp.SettingsMenu {
+            onBackRequested: stack.pop()
+        }
+    }
+
+    //Game map
+    Component {
+        id: gameScreenComponent
+
+        Comp.GameMap {
             onBackRequested: stack.pop()
         }
     }

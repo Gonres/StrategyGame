@@ -2,12 +2,16 @@
 #define GAME_MAP_H
 #include <QObject>
 #include <QRandomGenerator>
+#include <QVector>
+#include <QList>
 #include "tile.h"
-#include "tile_type.h"
 
 class GameMap : public QObject{
 
     Q_OBJECT
+    Q_PROPERTY(QList<QObject*> tiles READ getTiles CONSTANT)
+    Q_PROPERTY(int rows READ getRows CONSTANT)
+    Q_PROPERTY(int columns READ getColumns CONSTANT)
 private:
     QVector<Tile*> m_map;
     unsigned int m_rows;
@@ -15,6 +19,16 @@ private:
     void generateMap();
 
 public:
+
+
     explicit GameMap(unsigned int numberOfRows,unsigned int numberOfCollumns,QObject *parent = nullptr);
+    int getRows()const;
+    int getColumns()const;
+
+    Q_INVOKABLE int getIndex(unsigned int x, unsigned int y) const;
+    Q_INVOKABLE bool isValid(unsigned int x, unsigned int y) const;
+
+    QList<QObject*> getTiles() const;
+
 };
 #endif // GAME_MAP_H

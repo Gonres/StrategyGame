@@ -7,9 +7,8 @@ namespace TileType{
     Q_NAMESPACE
     enum Type{
         Grass,
-        Watter,
-        Mountain,
-        Sand
+        Water,
+        Mountain
     };
     Q_ENUM_NS(Type)
     };
