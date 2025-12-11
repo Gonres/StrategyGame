@@ -1,5 +1,7 @@
 #include "unit.h"
-
+#include "warrior.h"
+#include "archer.h"
+#include "cavalery.h"
 
 Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
            int attackRange, int movementRange, QObject *parent)
@@ -13,6 +15,16 @@ Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
 {
 
 };
+
+//Unit factory
+Unit* Unit::create(UnitType::Type unitType, QObject *parent){
+    switch(unitType){
+    case UnitType::warrior: return new Warrior(parent);
+    case UnitType::archer: return new Archer(parent);
+    case UnitType::cavalery: return new Cavalery(parent);
+        default: return nullptr;
+    }
+}
 
 UnitType::Type Unit::getUnitType() const{
     return m_unitType;
