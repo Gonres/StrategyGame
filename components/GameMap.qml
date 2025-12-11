@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Controls
 
 Item {
-    id: root
-    signal backRequested()
+    id: mapContainer
+    signal backRequested
 
     Rectangle {
         anchors.fill: parent
@@ -15,18 +15,21 @@ Item {
         z: 10
         anchors.left: parent.left
         anchors.top: parent.top
-        onClicked: root.backRequested()
+        onClicked: mapContainer.backRequested()
     }
+
+    property int cols: controller.map.columns
+    property int rows: controller.map.rows
+    property int dynamicCellSize: Math.floor(Math.min(width / cols,height / rows))
 
     //Map
     GridView {
         id: mapGrid
         anchors.centerIn: parent
-        width: controller.map.columns * cellWidth
-        height: controller.map.rows * cellHeight
-
-        cellWidth: 50
-        cellHeight: 50
+        width: mapContainer.dynamicCellSize * mapContainer.cols
+        height: mapContainer.dynamicCellSize * mapContainer.rows
+        cellWidth: mapContainer.dynamicCellSize
+        cellHeight: mapContainer.dynamicCellSize
 
         model: controller.map.tiles
 
@@ -36,11 +39,15 @@ Item {
 
             color: {
 
-                switch(type) {
-                    case TileType.Grass: return "green";
-                    case TileType.Water: return "blue";
-                    case TileType.Mountain: return "saddlebrown";
-                    default: return "magenta"; //Error color
+                switch (type) {
+                case TileType.Grass:
+                    return "green"
+                case TileType.Water:
+                    return "blue"
+                case TileType.Mountain:
+                    return "saddlebrown"
+                default:
+                    return "magenta" //Error color
                 }
             }
             border.color: Qt.darker(color, 1.2)
