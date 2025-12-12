@@ -17,42 +17,33 @@ Item {
     signal humanVsBotRequested
 
     Column {
-        id: column
-        spacing: 14
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
+        spacing: 16
 
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
             text: "Nová hra"
-            color: theme.textPrimary
             font.pixelSize: 32
-            font.bold: true
+            color: theme.textPrimary
+            horizontalAlignment: Text.AlignHCenter
+            width: 400
         }
 
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Vyber režim"
-            color: theme.textSecondary
-            font.pixelSize: 16
-        }
-
-        Rectangle {
-            width: 1
-            height: 18
-            color: "transparent"
-        }
-
+        // Člověk proti člověku
         MenuButton {
-            text: "Člověk vs Člověk"
-            onClicked: newGameRoot.humanVsHumanRequested()
+            text: "Člověk proti člověku"
+            onClicked: {
+                controller.startGame()
+                newGameRoot.humanVsHumanRequested()
+            }
         }
 
+        // Člověk vs Bot
         MenuButton {
             text: "Člověk vs Bot"
             onClicked: newGameRoot.humanVsBotRequested()
         }
 
+        // Zpět
         MenuButton {
             text: "Zpět"
             onClicked: newGameRoot.backRequested()

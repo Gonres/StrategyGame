@@ -3,13 +3,16 @@
 
 #include <QObject>
 
-namespace TileType{
-    Q_NAMESPACE
-    enum Type{
-        Grass,
-        Water,
-        Mountain
-    };
-    Q_ENUM_NS(Type)
-    };
+namespace TileType {
+Q_NAMESPACE
+
+enum Type {
+    Grass,
+    Watter,
+    Mountain,
+    Sand
+};
+Q_ENUM_NS(Type)
+}
+
 #endif // TILE_TYPE_H

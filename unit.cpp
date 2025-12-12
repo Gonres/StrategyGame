@@ -16,7 +16,6 @@ Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
 
 };
 
-//Unit factory
 Unit* Unit::create(UnitType::Type unitType, QObject *parent){
     switch(unitType){
     case UnitType::warrior: return new Warrior(parent);

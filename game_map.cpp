@@ -1,7 +1,8 @@
 #include "game_map.h"
-//#include <QDebug>
 
-GameMap::GameMap(unsigned int numberOfRows, unsigned int numberOfColumns, QObject* parent)
+GameMap::GameMap(unsigned int numberOfRows,
+                 unsigned int numberOfColumns,
+                 QObject* parent)
     : QObject(parent),
     m_rows(numberOfRows),
     m_columns(numberOfColumns)
@@ -9,71 +10,69 @@ GameMap::GameMap(unsigned int numberOfRows, unsigned int numberOfColumns, QObjec
     generateMap();
 }
 
+GameMap::~GameMap()
+{
+    clearTiles();
+}
 
-void GameMap::generateMap(){
+void GameMap::clearTiles()
+{
+    for (Tile* t : m_map) {
+        delete t;
+    }
+    m_map.clear();
+}
 
-    m_map.reserve(m_rows * m_columns); //Reservation of memory
+void GameMap::generateMap()
+{
+    clearTiles();
+    m_map.reserve(m_rows * m_columns);
 
-    for (unsigned int i = 0; i <m_rows * m_columns; i++){
-        int rand = QRandomGenerator::global()->bounded(100);
+    for (unsigned int i = 0; i < m_rows * m_columns; ++i) {
+        int r = QRandomGenerator::global()->bounded(100);
         TileType::Type type;
-        if(rand<60){
+
+        if (r < 60) {
             type = TileType::Grass;
-        }
-        else if(rand<80){
+        } else if (r < 80) {
+            type = TileType::Watter;
+        } else if (r < 95) {
             type = TileType::Mountain;
+        } else {
+            type = TileType::Sand;
         }
-        else if(rand<100){
-            type = TileType::Water;
-        }
+
         Tile* newTile = new Tile(type, this);
-        //qDebug()<<"Tyle: " << newTile->getType();
         m_map.append(newTile);
     }
 }
-int GameMap::getIndex(unsigned int x, unsigned int y)const{
-    return y*m_columns +x;
-}
-bool GameMap::isValid(unsigned int x, unsigned int y)const{
-    return x >=0 && x <m_columns and y >=0 && y < m_rows;
+
+int GameMap::getIndex(unsigned int x, unsigned int y) const
+{
+    return static_cast<int>(y * m_columns + x);
 }
 
-int GameMap::getRows()const{
-    return m_rows;
-}
-int GameMap::getColumns()const{
-    return m_columns;
+bool GameMap::isValid(unsigned int x, unsigned int y) const
+{
+    return x < m_columns && y < m_rows;
 }
 
-QList<QObject*> GameMap::getTiles() const {
-    // Transfer QVector<Tile*> to QList<QObject*>
+int GameMap::getRows() const
+{
+    return static_cast<int>(m_rows);
+}
+
+int GameMap::getColumns() const
+{
+    return static_cast<int>(m_columns);
+}
+
+QList<QObject*> GameMap::getTiles() const
+{
     QList<QObject*> list;
+    list.reserve(m_map.size());
     for (Tile* t : m_map) {
         list.append(t);
     }
     return list;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

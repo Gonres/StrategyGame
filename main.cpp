@@ -1,9 +1,11 @@
 #include "game_controller.h"
 #include "tile_type.h"
+#include "unit_type.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlEngine>
 
 int main(int argc, char *argv[])
 {
@@ -11,16 +13,25 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    //Globalni enum
+    // TileType enum pro QML
     qmlRegisterUncreatableMetaObject(
         TileType::staticMetaObject,
         "StrategyGame",
-        1, 0,
+        1,
+        0,
         "TileType",
-        "Error: TileType is a namespace"
-        );
+        "TileType is an enum");
 
-    QQmlContext* context = engine.rootContext();
+    // UnitType enum pro QML
+    qmlRegisterUncreatableMetaObject(
+        UnitType::staticMetaObject,
+        "StrategyGame",
+        1,
+        0,
+        "UnitType",
+        "UnitType is an enum");
+
+    QQmlContext *context = engine.rootContext();
 
     GameController controller;
     context->setContextProperty("controller", &controller);
@@ -31,6 +42,7 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+
     engine.loadFromModule("StrategyGame", "Main");
 
     return app.exec();

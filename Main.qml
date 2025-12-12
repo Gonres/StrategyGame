@@ -103,7 +103,6 @@ Window {
         }
     }
 
-    //Game map
     Component {
         id: gameScreenComponent
 

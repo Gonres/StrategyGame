@@ -11,10 +11,11 @@ TileType::Type Tile::getType() const
     return m_type;
 }
 
-void Tile::setTileType(TileType::Type newType){
-    if(m_type == newType){
+void Tile::setTileType(TileType::Type newType)
+{
+    if (m_type == newType)
         return;
-    }
+
     m_type = newType;
     emit typeChanged();
 }
