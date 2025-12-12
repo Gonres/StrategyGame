@@ -5,7 +5,8 @@
 #include <QQmlEngine>
 #include "unit_type.h"
 
-class Unit : public QObject{
+class Unit : public QObject
+{
     Q_OBJECT
     Q_PROPERTY(UnitType::Type unitType READ getUnitType CONSTANT)
     Q_PROPERTY(int health READ getHealth WRITE setHealth NOTIFY healthChanged)
@@ -23,15 +24,15 @@ private:
     int m_movementRange;
 
 public:
-    explicit Unit(UnitType::Type type,
-                  int health,
-                  int maxHealth,
-                  int attackDamage,
-                  int attackRange,
-                  int movementRange,
-                  QObject *parent);
+    Unit(UnitType::Type type,
+         int health,
+         int maxHealth,
+         int attackDamage,
+         int attackRange,
+         int movementRange,
+         QObject *parent);
 
-    Unit* create(UnitType::Type unitType, QObject *parent);
+    Unit *create(UnitType::Type unitType, QObject *parent);
 
     UnitType::Type getUnitType() const;
     int getHealth() const;

@@ -88,7 +88,7 @@ Window {
         id: newGameMenuComponent
         Comp.NewGameMenu {
             onBackRequested: stack.pop()
-            onHumanVsHumanRequested:{
+            onHumanVsHumanRequested: {
                 controller.startGame()
                 stack.push(gameScreenComponent)
             }

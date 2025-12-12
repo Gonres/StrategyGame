@@ -24,8 +24,7 @@ Item {
             text: "Nová hra"
             font.pixelSize: 32
             color: theme.textPrimary
-            horizontalAlignment: Text.AlignHCenter
-            width: 400
+            anchors.horizontalCenter: parent.horizontalCenter
         }
 
         // Člověk proti člověku

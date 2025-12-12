@@ -3,10 +3,12 @@
 
 #include "unit.h"
 
-class Archer: public Unit{
+class Archer : public Unit
+{
     Q_OBJECT
 public:
     explicit Archer(QObject *parent);
+
     void attack() override;
 };
 

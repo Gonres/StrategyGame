@@ -5,7 +5,7 @@ import "../style" as Style
 Rectangle {
     id: root
     property alias text: label.text
-    signal clicked()
+    signal clicked
 
     Style.Theme {
         id: theme
@@ -15,9 +15,33 @@ Rectangle {
     height: 48
     radius: 12
 
-    color: mouseArea.pressed
-           ? theme.primaryDark
-           : (mouseArea.containsMouse ? theme.primary : "#111827")
+    // Default color
+    color: "#111827"
+
+    states: [
+        State {
+            name: "pressed"
+            when: mouseArea.pressed
+            PropertyChanges {
+                target: root
+                color: theme.primaryDark
+            }
+        },
+        State {
+            name: "hovered"
+            when: mouseArea.containsMouse
+            PropertyChanges {
+                target: root
+                color: theme.primary
+            }
+        }
+    ]
+
+    transitions: Transition {
+        ColorAnimation {
+            duration: 150
+        }
+    }
 
     border.color: theme.primaryBorder
     border.width: 1

@@ -3,10 +3,13 @@
 
 #include "unit.h"
 
-class Warrior: public Unit{
+class Warrior : public Unit
+{
     Q_OBJECT
+
 public:
     explicit Warrior(QObject *parent);
+
     void attack() override;
 };
 

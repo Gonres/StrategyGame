@@ -8,34 +8,37 @@
 
 #include "tile.h"
 
-class GameMap : public QObject {
-
+class GameMap : public QObject
+{
     Q_OBJECT
-    Q_PROPERTY(QList<QObject*> tiles READ getTiles CONSTANT)
+    Q_PROPERTY(QList<QObject *> tiles READ getTiles CONSTANT)
     Q_PROPERTY(int rows READ getRows CONSTANT)
     Q_PROPERTY(int columns READ getColumns CONSTANT)
 
 private:
-    QVector<Tile*> m_map;
+    QList<Tile *> m_grid;
     unsigned int m_rows;
     unsigned int m_columns;
 
-    void generateMap();
+
     void clearTiles();
 
 public:
-    explicit GameMap(unsigned int numberOfRows,
-                     unsigned int numberOfColumns,
-                     QObject *parent = nullptr);
+    GameMap(unsigned int numberOfRows,
+            unsigned int numberOfColumns,
+            QObject *parent = nullptr);
+
     ~GameMap();
+
+    void generateMap();
 
     int getRows() const;
     int getColumns() const;
 
-    Q_INVOKABLE int  getIndex(unsigned int x, unsigned int y) const;
+    Q_INVOKABLE int getIndex(unsigned int x, unsigned int y) const;
     Q_INVOKABLE bool isValid(unsigned int x, unsigned int y) const;
 
-    QList<QObject*> getTiles() const;
+    QList<QObject *> getTiles() const;
 };
 
 #endif // GAME_MAP_H

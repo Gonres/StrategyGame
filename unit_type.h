@@ -3,12 +3,13 @@
 
 #include <QObject>
 
-namespace UnitType{
+namespace UnitType {
 Q_NAMESPACE
-enum Type{
+
+enum Type {
     warrior,
     archer,
-    cavalery
+    cavalry
 };
 Q_ENUM_NS(Type)
 };

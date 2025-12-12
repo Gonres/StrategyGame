@@ -4,7 +4,6 @@ import StrategyGame 1.0
 
 Item {
     id: mapContainer
-    anchors.fill: parent
 
     signal backRequested
 
@@ -29,21 +28,17 @@ Item {
         }
     }
 
-
     function updateUnitInfo(playerName, unitObj, colorStr) {
         if (!unitObj)
-            return;
+            return
+        showUnitInfo = true
+        unitInfoColor = colorStr
 
-        showUnitInfo = true;
-        unitInfoColor = colorStr;
+        unitInfoTitle = playerName + " – " + unitTypeToString(unitObj.unitType)
 
-        unitInfoTitle = playerName + " – " + unitTypeToString(unitObj.unitType);
-
-        unitInfoStats =
-              "Životy: " + unitObj.health + " / " + unitObj.maxHealth + "\n"
-            + "Útok: " + unitObj.attackDamage + "\n"
-            + "Dosah útoku: " + unitObj.attackRange + "\n"
-            + "Pohyb: " + unitObj.movementRange;
+        unitInfoStats = "Životy: " + unitObj.health + " / " + unitObj.maxHealth
+                + "\n" + "Útok: " + unitObj.attackDamage + "\n"
+                + "Dosah útoku: " + unitObj.attackRange + "\n" + "Pohyb: " + unitObj.movementRange
     }
 
     Rectangle {
@@ -62,7 +57,6 @@ Item {
         onClicked: mapContainer.backRequested()
     }
 
-
     Grid {
         id: mapGrid
         anchors.horizontalCenter: parent.horizontalCenter
@@ -78,20 +72,15 @@ Item {
             delegate: Rectangle {
                 width: mapContainer.tileSize
                 height: mapContainer.tileSize
-
-                color: modelData.type === TileType.Grass    ? "#4caf50" :
-                       modelData.type === TileType.Watter    ? "#2196f3" :
-                       modelData.type === TileType.Mountain  ? "#8d6e63" :
-                       modelData.type === TileType.Sand      ? "#fdd835" :
-                                                               "#ff00ff"
-
+                color: modelData.color
                 border.width: 1
                 border.color: "#111111"
             }
         }
     }
 
-    property int middleRow: controller.map ? Math.floor(controller.map.rows / 2) : 0
+    property int middleRow: controller.map ? Math.floor(
+                                                 controller.map.rows / 2) : 0
     property int lastColumn: controller.map ? controller.map.columns - 1 : 0
 
     Rectangle {
@@ -111,7 +100,9 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
-            onEntered: mapContainer.updateUnitInfo("Hráč 1", controller.player1Unit, "red")
+            onEntered: mapContainer.updateUnitInfo("Hráč 1",
+                                                   controller.player1Unit,
+                                                   "red")
             onExited: mapContainer.showUnitInfo = false
         }
     }
@@ -133,7 +124,9 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
-            onEntered: mapContainer.updateUnitInfo("Hráč 2", controller.player2Unit, "blue")
+            onEntered: mapContainer.updateUnitInfo("Hráč 2",
+                                                   controller.player2Unit,
+                                                   "blue")
             onExited: mapContainer.showUnitInfo = false
         }
     }

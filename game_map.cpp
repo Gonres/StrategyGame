@@ -2,13 +2,11 @@
 
 GameMap::GameMap(unsigned int numberOfRows,
                  unsigned int numberOfColumns,
-                 QObject* parent)
+                 QObject *parent)
     : QObject(parent),
-    m_rows(numberOfRows),
-    m_columns(numberOfColumns)
-{
-    generateMap();
-}
+      m_rows(numberOfRows),
+      m_columns(numberOfColumns)
+{}
 
 GameMap::~GameMap()
 {
@@ -17,16 +15,14 @@ GameMap::~GameMap()
 
 void GameMap::clearTiles()
 {
-    for (Tile* t : m_map) {
-        delete t;
-    }
-    m_map.clear();
+    qDeleteAll(m_grid);
+    m_grid.clear();
 }
 
 void GameMap::generateMap()
 {
     clearTiles();
-    m_map.reserve(m_rows * m_columns);
+    m_grid.reserve(m_rows * m_columns);
 
     for (unsigned int i = 0; i < m_rows * m_columns; ++i) {
         int r = QRandomGenerator::global()->bounded(100);
@@ -42,8 +38,7 @@ void GameMap::generateMap()
             type = TileType::Sand;
         }
 
-        Tile* newTile = new Tile(type, this);
-        m_map.append(newTile);
+        m_grid.append(new Tile(type, this));
     }
 }
 
@@ -67,11 +62,11 @@ int GameMap::getColumns() const
     return static_cast<int>(m_columns);
 }
 
-QList<QObject*> GameMap::getTiles() const
+QList<QObject *> GameMap::getTiles() const
 {
-    QList<QObject*> list;
-    list.reserve(m_map.size());
-    for (Tile* t : m_map) {
+    QList<QObject *> list;
+    list.reserve(m_grid.size());
+    for (Tile *t : m_grid) {
         list.append(t);
     }
     return list;
