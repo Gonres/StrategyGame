@@ -107,7 +107,10 @@ Window {
         id: gameScreenComponent
 
         Comp.GameMap {
-            onBackRequested: stack.pop()
+            onBackRequested: {
+                stack.pop()
+                controller.stopGame()
+            }
         }
     }
 }

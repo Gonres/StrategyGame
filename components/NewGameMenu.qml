@@ -30,10 +30,7 @@ Item {
         // Člověk proti člověku
         MenuButton {
             text: "Člověk proti člověku"
-            onClicked: {
-                controller.startGame()
-                newGameRoot.humanVsHumanRequested()
-            }
+            onClicked: newGameRoot.humanVsHumanRequested()
         }
 
         // Člověk vs Bot

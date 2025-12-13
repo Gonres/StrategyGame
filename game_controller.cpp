@@ -6,19 +6,20 @@ GameController::GameController(QObject *parent)
     : QObject{parent},
       m_running(false),
       m_map(GameMap(20, 20, this)),
-      m_player1Unit(nullptr),
-      m_player2Unit(nullptr) {}
+      m_player1Units(),
+      m_player2Units(),
+      m_selectedUnits(),
+      m_isPlayer1Turn(true) {}
 
 GameController::~GameController()
 {
-    if (m_player1Unit) {
-        delete m_player1Unit;
-        m_player1Unit = nullptr;
-    }
-    if (m_player2Unit) {
-        delete m_player2Unit;
-        m_player2Unit = nullptr;
-    }
+    m_selectedUnits.clear();
+
+    qDeleteAll(m_player1Units);
+    m_player1Units.clear();
+
+    qDeleteAll(m_player2Units);
+    m_player2Units.clear();
 }
 
 GameMap *GameController::getMap()
@@ -31,14 +32,14 @@ bool GameController::isRunning() const
     return m_running;
 }
 
-Unit *GameController::player1Unit() const
+QList<Unit *> GameController::player1Units() const
 {
-    return m_player1Unit;
+    return m_player1Units;
 }
 
-Unit *GameController::player2Unit() const
+QList<Unit *> GameController::player2Units() const
 {
-    return m_player2Unit;
+    return m_player2Units;
 }
 
 void GameController::startGame()
@@ -47,17 +48,87 @@ void GameController::startGame()
     emit isRunningNotify();
     m_map.generateMap();
 
-    // jednotky obou hráčů – jednoduchý setup:
-    // Hráč 1 = Warrior, Hráč 2 = Archer
-    if (m_player1Unit) {
-        delete m_player1Unit;
-        m_player1Unit = nullptr;
+    int midRow = m_map.getRows() / 2;
+    int lastCol = m_map.getColumns() - 1;
+
+    m_player1Units.append(new Warrior(QPoint{0, midRow}, this));
+    m_player1Units.append(new Warrior(QPoint{0, midRow - 1}, this));
+    m_player1Units.append(new Warrior(QPoint{0, midRow + 1}, this));
+    emit player1UnitsChanged();
+
+    m_player2Units.append(new Archer(QPoint{lastCol, midRow}, this));
+    m_player2Units.append(new Archer(QPoint{lastCol, midRow - 1}, this));
+    m_player2Units.append(new Archer(QPoint{lastCol, midRow + 1}, this));
+    emit player2UnitsChanged();
+}
+
+void GameController::stopGame()
+{
+    m_selectedUnits.clear();
+    emit selectionChanged();
+
+    qDeleteAll(m_player1Units);
+    m_player1Units.clear();
+    emit player1UnitsChanged();
+
+    qDeleteAll(m_player2Units);
+    m_player2Units.clear();
+    emit player2UnitsChanged();
+
+    m_running = false;
+    emit isRunningNotify();
+}
+
+void GameController::endTurn()
+{
+    clearSelection();
+    m_isPlayer1Turn = !m_isPlayer1Turn;
+    emit turnChanged();
+}
+
+QList<Unit *> GameController::getSelectedUnits() const
+{
+    return m_selectedUnits;
+}
+
+bool GameController::isPlayer1Turn() const
+{
+    return m_isPlayer1Turn;
+}
+
+void GameController::clearSelection()
+{
+    if (!m_selectedUnits.isEmpty()) {
+        for (Unit *unit : m_selectedUnits) {
+            unit->setUnitSelected(false);
+        }
+        m_selectedUnits.clear();
+        emit selectionChanged();
     }
-    if (m_player2Unit) {
-        delete m_player2Unit;
-        m_player2Unit = nullptr;
+}
+
+void GameController::addToSelection(Unit *unit)
+{
+    if (unit && !m_selectedUnits.contains(unit)) {
+        m_selectedUnits.append(unit);
+        unit->setUnitSelected(true);
+        qDebug() << "Unit added to selection! Total selected:" << m_selectedUnits.size();
+        emit selectionChanged();
+    }
+}
+
+void GameController::moveSelectedUnits(int targetX, int targetY)
+{
+    if (m_selectedUnits.isEmpty()) {
+        return;
     }
 
-    m_player1Unit = new Warrior(this);
-    m_player2Unit = new Archer(this);
+    QPoint targetPos{targetX, targetY};
+
+    for (Unit *unit : m_selectedUnits) {
+        if (unit) {
+            qDebug() << "Moving unit" << unit << "to" << targetPos;
+            unit->setPosition(targetPos);
+        }
+    }
 }

@@ -6,8 +6,9 @@
 class Cavalry : public Unit
 {
     Q_OBJECT
+
 public:
-    explicit Cavalry(QObject *parent);
+    explicit Cavalry(QPoint position, QObject *parent);
 
     void attack() override;
 };

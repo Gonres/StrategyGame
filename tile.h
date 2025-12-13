@@ -3,15 +3,14 @@
 
 #include "tile_type.h"
 #include <QObject>
+#include <qqmlintegration.h>
 
 class Tile : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(TileType::Type type READ getType WRITE setTileType NOTIFY typeChanged)
     Q_PROPERTY(QString color READ getColor CONSTANT)
-
-private:
-    TileType::Type m_type;
 
 public:
     explicit Tile(TileType::Type type, QObject *parent = nullptr);
@@ -22,6 +21,9 @@ public:
 
 signals:
     void typeChanged();
+
+private:
+    TileType::Type m_type;
 };
 
 #endif // TILE_H

@@ -40,6 +40,7 @@ void GameMap::generateMap()
 
         m_grid.append(new Tile(type, this));
     }
+    emit mapChanged();
 }
 
 int GameMap::getIndex(unsigned int x, unsigned int y) const
@@ -62,12 +63,7 @@ int GameMap::getColumns() const
     return static_cast<int>(m_columns);
 }
 
-QList<QObject *> GameMap::getTiles() const
+QList<Tile *> GameMap::getTiles() const
 {
-    QList<QObject *> list;
-    list.reserve(m_grid.size());
-    for (Tile *t : m_grid) {
-        list.append(t);
-    }
-    return list;
+    return m_grid;
 }

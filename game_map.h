@@ -11,17 +11,10 @@
 class GameMap : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QList<QObject *> tiles READ getTiles CONSTANT)
+    QML_ELEMENT
+    Q_PROPERTY(QList<Tile *> tiles READ getTiles NOTIFY mapChanged)
     Q_PROPERTY(int rows READ getRows CONSTANT)
     Q_PROPERTY(int columns READ getColumns CONSTANT)
-
-private:
-    QList<Tile *> m_grid;
-    unsigned int m_rows;
-    unsigned int m_columns;
-
-
-    void clearTiles();
 
 public:
     GameMap(unsigned int numberOfRows,
@@ -38,7 +31,17 @@ public:
     Q_INVOKABLE int getIndex(unsigned int x, unsigned int y) const;
     Q_INVOKABLE bool isValid(unsigned int x, unsigned int y) const;
 
-    QList<QObject *> getTiles() const;
+    QList<Tile *> getTiles() const;
+
+signals:
+    void mapChanged();
+
+private:
+    QList<Tile *> m_grid;
+    unsigned int m_rows;
+    unsigned int m_columns;
+
+    void clearTiles();
 };
 
 #endif // GAME_MAP_H

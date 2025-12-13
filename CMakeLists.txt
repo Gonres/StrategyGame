@@ -43,6 +43,9 @@ qt_add_qml_module(appStrategyGame
         SOURCES archer.cpp
         SOURCES cavalry.h
         SOURCES cavalry.cpp
+        QML_FILES
+        QML_FILES components/SelectionArea.qml
+        SOURCES
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

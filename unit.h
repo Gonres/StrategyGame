@@ -1,19 +1,52 @@
 #ifndef UNIT_H
 #define UNIT_H
 
+#include "unit_type.h"
 #include <QObject>
 #include <QQmlEngine>
-#include "unit_type.h"
+#include <qpoint.h>
 
 class Unit : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(UnitType::Type unitType READ getUnitType CONSTANT)
     Q_PROPERTY(int health READ getHealth WRITE setHealth NOTIFY healthChanged)
     Q_PROPERTY(int maxHealth READ getMaxHealth CONSTANT)
     Q_PROPERTY(int attackDamage READ getAttackDamage CONSTANT)
     Q_PROPERTY(int attackRange READ getAttackRange CONSTANT)
     Q_PROPERTY(int movementRange READ getMovementRange CONSTANT)
+    Q_PROPERTY(QString unitTypeName READ unitTypeToString CONSTANT)
+    Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
+    Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
+
+public:
+    Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
+         int attackRange, int movementRange, QPoint position, QObject *parent);
+
+    Unit *create(UnitType::Type unitType, QPoint position, QObject *parent);
+
+    UnitType::Type getUnitType() const;
+    int getHealth() const;
+    int getMaxHealth() const;
+    int getAttackDamage() const;
+    int getAttackRange() const;
+    int getMovementRange() const;
+    QPoint getPosition() const;
+    bool isUnitSelected() const;
+    QString unitTypeToString() const;
+
+    void setHealth(int newHealth);
+    void setPosition(QPoint position);
+    void setUnitSelected(bool selected);
+
+    virtual ~Unit() = default;
+    virtual void attack() = 0;
+
+signals:
+    void healthChanged();
+    void positionChanged();
+    void unitSelectedChanged();
 
 private:
     UnitType::Type m_unitType;
@@ -22,32 +55,8 @@ private:
     int m_attackDamage;
     int m_attackRange;
     int m_movementRange;
-
-public:
-    Unit(UnitType::Type type,
-         int health,
-         int maxHealth,
-         int attackDamage,
-         int attackRange,
-         int movementRange,
-         QObject *parent);
-
-    Unit *create(UnitType::Type unitType, QObject *parent);
-
-    UnitType::Type getUnitType() const;
-    int getHealth() const;
-    int getMaxHealth() const;
-    int getAttackDamage() const;
-    int getAttackRange() const;
-    int getMovementRange() const;
-
-    void setHealth(int newHealth);
-
-    virtual ~Unit() = default;
-    virtual void attack() = 0;
-
-signals:
-    void healthChanged();
+    QPoint m_position;
+    bool m_unitSelected;
 };
 
 #endif // UNIT_H
