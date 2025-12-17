@@ -36,9 +36,10 @@ Item {
         id: theme
     }
 
+    // Background
     Rectangle {
         anchors.fill: parent
-        color: "#222222"
+        color: theme.mapBackground
     }
 
     // reaguj na změny jednotek -> výhra
@@ -79,7 +80,7 @@ Item {
                 height: mapContainer.tileSize
                 color: modelData.color
                 border.width: 1
-                border.color: "#111111"
+                border.color: theme.mapTileBorder
             }
         }
 
@@ -89,7 +90,7 @@ Item {
         //     delegate: Rectangle {
         //         width: mapContainer.tileSize
         //         height: mapContainer.tileSize
-        //         color: "#aa00ff00"
+        //         color: theme.reachableTile
         //         opacity: 0.4
         //         x: modelData.x * mapContainer.tileSize
         //         y: modelData.y * mapContainer.tileSize
@@ -107,9 +108,9 @@ Item {
         anchors.right: parent.right
         anchors.margins: 16
         radius: 10
-        color: "#333333"
+        color: theme.panelBg
         border.width: 1
-        border.color: "#777777"
+        border.color: theme.panelBorder
         z: 70
         visible: controller.action.selectedUnits.length > 0
 
@@ -129,6 +130,20 @@ Item {
                     checked: actionMode === "move"
                     enabled: !gameOver
                     onClicked: actionMode = "move"
+
+                    background: Rectangle {
+                        radius: 8
+                        color: parent.checked ? theme.buttonActive : theme.buttonBg
+                        border.width: 1
+                        border.color: parent.checked ? theme.buttonActiveBorder : theme.buttonBorder
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: theme.buttonText
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
                 }
 
                 Button {
@@ -140,6 +155,20 @@ Item {
                     enabled: !gameOver
                              && (selectedUnit !== null ? !selectedUnit.hasAttacked : false)
                     onClicked: actionMode = "attack"
+
+                    background: Rectangle {
+                        radius: 8
+                        color: parent.checked ? theme.buttonDanger : theme.buttonBg
+                        border.width: 1
+                        border.color: parent.checked ? theme.buttonDangerBorder : theme.buttonBorder
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: theme.buttonText
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
                 }
             }
 
@@ -155,10 +184,10 @@ Item {
                 delegate: Rectangle {
                     width: unitList.width
                     height: 110
-                    color: "#444444"
+                    color: theme.cardBg
                     radius: 8
                     border.width: 1
-                    border.color: "#555"
+                    border.color: theme.cardBorder
 
                     Column {
                         anchors.centerIn: parent
@@ -167,14 +196,14 @@ Item {
 
                         Text {
                             text: modelData.unitTypeName
-                            color: "white"
+                            color: theme.textPrimary
                             font.bold: true
                             font.pixelSize: 16
                         }
 
                         Text {
                             text: "❤ Životy: " + modelData.health + " / " + modelData.maxHealth
-                            color: "#FFAAAA"
+                            color: theme.statHealth
                             font.pixelSize: 13
                         }
 
@@ -182,12 +211,12 @@ Item {
                             spacing: 12
                             Text {
                                 text: "⚔ Útok: " + modelData.attackDamage
-                                color: "#AAAAFF"
+                                color: theme.statAttack
                                 font.pixelSize: 12
                             }
                             Text {
                                 text: "➶ Dosah: " + modelData.attackRange
-                                color: "#AAFFAA"
+                                color: theme.statRange
                                 font.pixelSize: 12
                             }
                         }
@@ -195,14 +224,14 @@ Item {
                         Text {
                             text: "⟷ Pohyb: " + modelData.movementPoints + " / "
                                   + modelData.movementRange
-                            color: "#DDDDDD"
+                            color: theme.statMove
                             font.pixelSize: 12
                         }
 
                         Text {
                             text: "🗡 Útok v tahu: "
                                   + (modelData.hasAttacked ? "už použit" : "dostupný")
-                            color: modelData.hasAttacked ? "#ff9aa2" : "#b7ffb7"
+                            color: modelData.hasAttacked ? theme.statUsed : theme.statReady
                             font.pixelSize: 12
                         }
                     }
@@ -213,9 +242,9 @@ Item {
 
     Column {
         id: bottomHud
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 20
+        anchors.top: mapGrid.bottom
+        anchors.horizontalCenter: mapGrid.horizontalCenter
+        anchors.topMargin: 40
         spacing: 10
         z: 80
 
@@ -242,7 +271,7 @@ Item {
         id: mapHitFlash
         anchors.fill: mapGrid
         z: 60
-        color: "#ff0000"
+        color: theme.flashAttack
         opacity: 0
         visible: opacity > 0
     }
@@ -269,17 +298,15 @@ Item {
         anchors.bottom: mapGrid.top
         anchors.bottomMargin: 16
         radius: 8
-        color: "#000000"
-        opacity: mapContainer.lastMoveMessage.length > 0 ? 0.7 : 0
+        color: theme.toastBg
+        opacity: mapContainer.lastMoveMessage.length > 0 ? theme.toastOpacity : 0
         visible: opacity > 0
         z: 90
         width: Math.min(mapGrid.width, 700)
         height: msg.implicitHeight + 16
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: 160
-            }
+            NumberAnimation { duration: 160 }
         }
 
         Text {
@@ -289,7 +316,7 @@ Item {
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             text: mapContainer.lastMoveMessage
-            color: "white"
+            color: theme.toastText
             font.pixelSize: 14
         }
     }
@@ -299,7 +326,7 @@ Item {
         anchors.fill: parent
         z: 200
         visible: gameOver
-        color: "#000000cc"
+        color: theme.gameOverOverlay
 
         Column {
             anchors.centerIn: parent
@@ -307,7 +334,7 @@ Item {
 
             Text {
                 text: winnerText
-                color: "white"
+                color: theme.textPrimary
                 font.pixelSize: 34
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
@@ -315,7 +342,7 @@ Item {
 
             Text {
                 text: "Hra skončila."
-                color: "#dddddd"
+                color: theme.textMuted
                 font.pixelSize: 16
                 horizontalAlignment: Text.AlignHCenter
             }
@@ -326,6 +353,7 @@ Item {
             }
         }
     }
+
     // PLAYER 1 UNITS
     Repeater {
         model: controller.unitRepository.player1Units
@@ -333,7 +361,7 @@ Item {
         delegate: UnitPiece {
             unitModel: modelData
             isPlayer1Unit: true
-            unitColor: "red"
+            unitColor: theme.unitP1
             tileSize: mapContainer.tileSize
             mapGridObj: mapGrid
             actionMode: mapContainer.actionMode
@@ -354,11 +382,12 @@ Item {
         delegate: UnitPiece {
             unitModel: modelData
             isPlayer1Unit: false
-            unitColor: "blue"
+            unitColor: theme.unitP2
             tileSize: mapContainer.tileSize
             mapGridObj: mapGrid
             actionMode: mapContainer.actionMode
             gameOver: mapContainer.gameOver
+
             onAttackSuccess: {
                 mapHitFlashAnim.restart()
                 controller.checkVictory()

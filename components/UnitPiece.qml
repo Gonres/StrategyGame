@@ -1,5 +1,6 @@
 import QtQuick
 import StrategyGame 1.0
+import "../style" as Style
 
 Rectangle {
     id: root
@@ -8,7 +9,7 @@ Rectangle {
 
     // Configuration
     property bool isPlayer1Unit: true
-    property string unitColor: "red"
+    property string unitColor: "red"     // můžeš nechat, ale níž to přebarvím přes theme
     property int tileSize: 35
     property var mapGridObj
 
@@ -17,28 +18,32 @@ Rectangle {
 
     signal attackSuccess
 
+    Style.Theme { id: theme }
+
     width: tileSize
     height: tileSize
     radius: 7
-    color: unitColor
+
+    // barva jednotky primárně z Theme (pokud chceš, unitColor pořád funguje jako fallback)
+    color: (isPlayer1Unit ? theme.unitP1 : theme.unitP2) || unitColor
+
     border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
-    border.color: (unitModel && unitModel.unitSelected) ? "lime" : "white"
+    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
     z: 20
 
     // Internal state
     property point originalPos: Qt.point(0, 0)
-    readonly property bool isOwnerTurn: (isPlayer1Unit
-                                         && controller.isPlayer1Turn)
-                                        || (!isPlayer1Unit
-                                            && !controller.isPlayer1Turn)
+    readonly property bool isOwnerTurn: (isPlayer1Unit && controller.isPlayer1Turn)
+                                        || (!isPlayer1Unit && !controller.isPlayer1Turn)
 
     // Move Animation
     Rectangle {
         id: moveGlow
         anchors.fill: parent
         radius: parent.radius
-        color: "#55ff55"
+        color: theme.unitMoveGlow
         opacity: 0
+        visible: opacity > 0
     }
 
     SequentialAnimation {
@@ -78,9 +83,11 @@ Rectangle {
         id: hitFlash
         anchors.fill: parent
         radius: parent.radius
-        color: "#ff2222"
+        color: theme.unitHitFlash
         opacity: 0
+        visible: opacity > 0
     }
+
     SequentialAnimation {
         id: hitAnim
         ParallelAnimation {
@@ -128,23 +135,22 @@ Rectangle {
         id: moveAnimY
         duration: 200
         running: false
-        onStopped: {
-            root.bindToModel()
-        }
+        onStopped: root.bindToModel()
     }
 
     // position binding
     function bindToModel() {
-        if (!mapGridObj) {
-            return
-        }
+        if (!mapGridObj) return
+
         root.x = Qt.binding(function () {
-            return (unitModel
-                    && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
+            return (unitModel && mapGridObj)
+                    ? mapGridObj.x + unitModel.position.x * tileSize
+                    : 0
         })
         root.y = Qt.binding(function () {
-            return (unitModel
-                    && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
+            return (unitModel && mapGridObj)
+                    ? mapGridObj.y + unitModel.position.y * tileSize
+                    : 0
         })
     }
 
@@ -152,6 +158,7 @@ Rectangle {
 
     // interaction
     MouseArea {
+        id: ma
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -175,6 +182,7 @@ Rectangle {
             }
             if (drag.active) {
                 root.originalPos = Qt.point(root.x, root.y)
+                // “odvázání” bindingu řešíš tím, že při drag aktivním nastavíš přímo x/y
                 root.x = root.x
                 root.y = root.y
             }
@@ -202,6 +210,7 @@ Rectangle {
                     root.x = mapGridObj.x + col * tileSize
                     root.y = mapGridObj.y + row * tileSize
                     root.bindToModel()
+                    // moveAnim.restart() // pokud chceš vizuální efekt při úspěšném move
                 } else {
                     root.x = root.originalPos.x
                     root.y = root.originalPos.y
@@ -209,5 +218,16 @@ Rectangle {
                 }
             }
         }
+    }
+
+    // jemný hover/pressed outline přes Theme (jen UX detail)
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: "transparent"
+        border.width: (ma.pressed || ma.containsMouse) ? 1 : 0
+        border.color: ma.pressed ? theme.unitPressedBorder : theme.unitHoverBorder
+        z: 25
+        visible: !gameOver
     }
 }
