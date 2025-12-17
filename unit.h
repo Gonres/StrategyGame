@@ -22,10 +22,10 @@ class Unit : public QObject
     Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
     Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
 
-public:
+protected:
     Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
          int attackRange, int movementRange, QPoint position, QObject *parent);
-
+public:
     static Unit *create(UnitType::Type unitType, QPoint position,
                         QObject *parent);
 
