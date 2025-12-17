@@ -213,9 +213,9 @@ Item {
 
     Column {
         id: bottomHud
-        anchors.top: mapGrid.bottom
-        anchors.horizontalCenter: mapGrid.horizontalCenter
-        anchors.topMargin: 40
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.topMargin: 20
         spacing: 10
         z: 80
 
