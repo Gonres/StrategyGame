@@ -16,6 +16,8 @@ class Unit : public QObject
     Q_PROPERTY(int attackDamage READ getAttackDamage CONSTANT)
     Q_PROPERTY(int attackRange READ getAttackRange CONSTANT)
     Q_PROPERTY(int movementRange READ getMovementRange CONSTANT)
+    Q_PROPERTY(int movementPoints READ getMovementPoints NOTIFY movementPointsChanged)
+    Q_PROPERTY(bool hasAttacked READ hasAttacked NOTIFY hasAttackedChanged)
     Q_PROPERTY(QString unitTypeName READ unitTypeToString CONSTANT)
     Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
     Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
@@ -24,7 +26,8 @@ public:
     Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
          int attackRange, int movementRange, QPoint position, QObject *parent);
 
-    Unit *create(UnitType::Type unitType, QPoint position, QObject *parent);
+    static Unit *create(UnitType::Type unitType, QPoint position,
+                        QObject *parent);
 
     UnitType::Type getUnitType() const;
     int getHealth() const;
@@ -32,21 +35,29 @@ public:
     int getAttackDamage() const;
     int getAttackRange() const;
     int getMovementRange() const;
+    int getMovementPoints() const;
     QPoint getPosition() const;
     bool isUnitSelected() const;
+    bool hasAttacked() const;
     QString unitTypeToString() const;
 
     void setHealth(int newHealth);
     void setPosition(QPoint position);
     void setUnitSelected(bool selected);
+    void attack(Unit *target);
 
-    virtual ~Unit() = default;
-    virtual void attack() = 0;
+
+    Q_INVOKABLE void resetMovement();
+    Q_INVOKABLE bool spendMovement(int cost);
+    Q_INVOKABLE void resetAttack();
+    Q_INVOKABLE void markAttacked();
 
 signals:
     void healthChanged();
     void positionChanged();
     void unitSelectedChanged();
+    void movementPointsChanged();
+    void hasAttackedChanged();
 
 private:
     UnitType::Type m_unitType;
@@ -55,6 +66,8 @@ private:
     int m_attackDamage;
     int m_attackRange;
     int m_movementRange;
+    int m_movementPoints;
+    bool m_hasAttacked;
     QPoint m_position;
     bool m_unitSelected;
 };

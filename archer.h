@@ -8,9 +8,7 @@ class Archer : public Unit
     Q_OBJECT
 
 public:
-    explicit Archer(QPoint position, QObject *parent);
-
-    void attack() override;
+    Archer(QPoint position, QObject *parent);
 };
 
 #endif // ARCHER_H

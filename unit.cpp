@@ -11,6 +11,8 @@ Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
       m_attackDamage(attackDamage),
       m_attackRange(attackRange),
       m_movementRange(movementRange),
+      m_movementPoints(movementRange),
+      m_hasAttacked(false),
       m_position(position),
       m_unitSelected(false),
       QObject(parent) {}
@@ -32,6 +34,53 @@ Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
 UnitType::Type Unit::getUnitType() const
 {
     return m_unitType;
+}
+
+bool Unit::hasAttacked() const
+{
+    return m_hasAttacked;
+}
+
+void Unit::resetMovement()
+{
+    m_movementPoints = m_movementRange;
+    emit movementPointsChanged();
+}
+
+bool Unit::spendMovement(int cost)
+{
+    if (cost <= 0) {
+        return true;
+    }
+    if (m_movementPoints < cost) {
+        return false;
+    }
+    m_movementPoints -= cost;
+    emit movementPointsChanged();
+    return true;
+}
+
+void Unit::resetAttack()
+{
+    if (!m_hasAttacked) {
+        return;
+    }
+    m_hasAttacked = false;
+    emit hasAttackedChanged();
+}
+
+void Unit::markAttacked()
+{
+    if (m_hasAttacked) {
+        return;
+    }
+    m_hasAttacked = true;
+    emit hasAttackedChanged();
+}
+
+int Unit::getMovementPoints() const
+{
+    return m_movementPoints;
 }
 
 int Unit::getHealth() const
@@ -109,4 +158,21 @@ QString Unit::unitTypeToString() const
     default:
         return "Unknown";
     }
+}
+
+void Unit::attack(Unit *target)
+{
+    if (!target) {
+        return;
+    }
+
+    // Default damage calculation
+    int newHealth = target->getHealth() - m_attackDamage;
+    if (newHealth < 0) {
+        newHealth = 0;
+    }
+    target->setHealth(newHealth);
+    qDebug() << "Unit " << unitTypeToString() << " attacked "
+             << target->unitTypeToString() << " dealing " << m_attackDamage
+             << " damage. Remaining Health: " << newHealth;
 }

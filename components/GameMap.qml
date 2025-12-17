@@ -1,18 +1,55 @@
 import QtQuick
 import QtQuick.Controls
 import StrategyGame 1.0
+import "../style" as Style
 
 Item {
     id: mapContainer
-
     signal backRequested
 
-    // velikost jednoho políčka
     property int tileSize: 35
+    property string actionMode: "move" // "move" | "attack"
+    property var selectedUnit: (controller.action.selectedUnits.length
+                                > 0 ? controller.action.selectedUnits[0] : null)
+    property bool hasMovePoints: (selectedUnit !== null
+                                  && selectedUnit.movementPoints > 0)
+
+    property bool gameOver: controller.winnerText !== ""
+    property string winnerText: controller.winnerText
+    property string lastMoveMessage: ""
+
+    Timer {
+        id: messageTimer
+        interval: 3000
+        onTriggered: controller.action.lastMoveMessage = ""
+    }
+
+    Connections {
+        target: controller.action
+        function onActionMessage(msg) {
+            mapContainer.lastMoveMessage = msg
+            messageTimer.restart()
+        }
+    }
+
+    Style.Theme {
+        id: theme
+    }
 
     Rectangle {
         anchors.fill: parent
         color: "#222222"
+    }
+
+    // reaguj na změny jednotek -> výhra
+    Connections {
+        target: controller.unitRepository
+        function onPlayer1UnitsChanged() {
+            controller.checkVictory()
+        }
+        function onPlayer2UnitsChanged() {
+            controller.checkVictory()
+        }
     }
 
     MenuButton {
@@ -21,8 +58,8 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.margins: 16
-        z: 10
-
+        z: 80
+        enabled: !gameOver
         onClicked: mapContainer.backRequested()
     }
 
@@ -37,7 +74,6 @@ Item {
 
         Repeater {
             model: controller.map ? controller.map.tiles : []
-
             delegate: Rectangle {
                 width: mapContainer.tileSize
                 height: mapContainer.tileSize
@@ -46,230 +82,287 @@ Item {
                 border.color: "#111111"
             }
         }
+
+        // FUTURE HIGHLIGHTING
+        // Repeater {
+        //     model: (mapContainer.selectedUnit && mapContainer.actionMode === "move") ? controller.action.reachableTiles() : []
+        //     delegate: Rectangle {
+        //         width: mapContainer.tileSize
+        //         height: mapContainer.tileSize
+        //         color: "#aa00ff00"
+        //         opacity: 0.4
+        //         x: modelData.x * mapContainer.tileSize
+        //         y: modelData.y * mapContainer.tileSize
+        //         z: 10
+        //     }
+        // }
     }
 
-    Column {
-        anchors.top: mapGrid.bottom
-        anchors.horizontalCenter: mapGrid.horizontalCenter
-        anchors.topMargin: 100
-        spacing: 16
-
-        Text {
-            text: controller.isPlayer1Turn ? "Hraje hráč 1" : "Hraje hráč 2"
-            font.pixelSize: 32
-            color: theme.textPrimary
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-        MenuButton {
-            id: endTurnButton
-            text: "Ukončit tah"
-            onClicked: controller.endTurn()
-        }
-    }
-
-    property int middleRow: controller.map ? Math.floor(
-                                                 controller.map.rows / 2) : 0
-    property int lastColumn: controller.map ? controller.map.columns - 1 : 0
-
-    Repeater {
-        model: controller.player1Units
-        delegate: Rectangle {
-            id: p1Unit
-            width: mapContainer.tileSize
-            height: mapContainer.tileSize
-            radius: 6
-            color: "red"
-            border.width: 3
-            border.color: modelData.unitSelected ? "darkGreen" : "white"
-            visible: true
-
-            x: mapGrid.x + (modelData ? modelData.position.x * mapContainer.tileSize : 0)
-            y: mapGrid.y + (modelData ? modelData.position.y * mapContainer.tileSize : 0)
-            z: 5
-
-            Behavior on x {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-            Behavior on y {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    if (controller.isPlayer1Turn) {
-                        controller.clearSelection()
-                        controller.addToSelection(modelData)
-                    }
-                }
-            }
-        }
-    }
-
-    Repeater {
-        model: controller.player2Units
-        delegate: Rectangle {
-            id: p2Unit
-            width: mapContainer.tileSize
-            height: mapContainer.tileSize
-            radius: 6
-            color: "blue"
-            border.width: 3
-            border.color: modelData.unitSelected ? "darkGreen" : "white"
-            visible: true
-
-            x: mapGrid.x + (modelData ? modelData.position.x * mapContainer.tileSize : 0)
-            y: mapGrid.y + (modelData ? modelData.position.y * mapContainer.tileSize : 0)
-            z: 5
-
-            Behavior on x {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-            Behavior on y {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: {
-                    if (!controller.isPlayer1Turn) {
-                        controller.clearSelection()
-                        controller.addToSelection(modelData)
-                    }
-                }
-            }
-        }
-    }
-
-    SelectionArea {
-        id: selectionHandler
-        anchors.fill: mapGrid
-        onSelectionCompleted: (x, y, width, height) => {
-                                  if (width < 2 && height < 2) {
-                                      return
-                                  }
-                                  controller.clearSelection()
-                                  var startCol = Math.floor(
-                                      x / mapContainer.tileSize)
-                                  var startRow = Math.floor(
-                                      y / mapContainer.tileSize)
-                                  var endCol = Math.floor(
-                                      (x + width) / mapContainer.tileSize)
-                                  var endRow = Math.floor(
-                                      (y + height) / mapContainer.tileSize)
-
-                                  var selectIfInArea = function (unitList) {
-                                      for (var i = 0; i < unitList.length; i++) {
-                                          var unit = unitList[i]
-                                          if (unit.position.x >= startCol
-                                                  && unit.position.x <= endCol
-                                                  && unit.position.y >= startRow
-                                                  && unit.position.y <= endRow) {
-                                              controller.addToSelection(unit)
-                                          }
-                                      }
-                                  }
-                                  if (controller.isPlayer1Turn) {
-                                      selectIfInArea(controller.player1Units)
-                                  } else {
-                                      selectIfInArea(controller.player2Units)
-                                  }
-                              }
-        onRightChanged: (x, y) => {
-                            var col = Math.floor(x / mapContainer.tileSize)
-                            var row = Math.floor(y / mapContainer.tileSize)
-                            console.log("Moved to grid:", col, row)
-                            controller.moveSelectedUnits(col, row)
-                        }
-    }
-
+    // info panel jednotek
     Rectangle {
         id: unitInfoPanel
-        width: 260
+        width: 280
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
         anchors.margins: 16
-        radius: 8
+        radius: 10
         color: "#333333"
         border.width: 1
         border.color: "#777777"
-        z: 20
-        visible: controller.selectedUnits.length > 0
+        z: 70
+        visible: controller.action.selectedUnits.length > 0
 
-        ListView {
-            id: unitList
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: 10
-            clip: true
-            spacing: 8
-            model: controller.selectedUnits
-            delegate: Rectangle {
-                width: unitList.width
-                height: 85
-                color: "#444444"
-                radius: 4
-                border.width: 1
-                border.color: "#555"
+        Column {
+            anchors.fill: parent
+            anchors.margins: 12
+            spacing: 10
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: parent.color = "#505050"
-                    onExited: parent.color = "#444444"
+            Row {
+                spacing: 8
+
+                Button {
+                    text: "Pohyb 🥾"
+                    width: 124
+                    height: 40
+                    checkable: true
+                    checked: actionMode === "move"
+                    enabled: !gameOver
+                    onClicked: actionMode = "move"
                 }
 
-                Column {
-                    anchors.centerIn: parent
-                    width: parent.width - 20
-                    spacing: 4
+                Button {
+                    text: "Útok 🗡"
+                    width: 124
+                    height: 40
+                    checkable: true
+                    checked: actionMode === "attack"
+                    enabled: !gameOver
+                             && (selectedUnit !== null ? !selectedUnit.hasAttacked : false)
+                    onClicked: actionMode = "attack"
+                }
+            }
 
-                    Text {
-                        text: modelData.unitTypeName
-                        color: "white"
-                        font.bold: true
-                        font.pixelSize: 16
-                    }
+            ListView {
+                id: unitList
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: parent.height
+                clip: true
+                spacing: 10
+                model: controller.action.selectedUnits
 
-                    Text {
-                        text: "❤ Životy: " + modelData.health + " / " + modelData.maxHealth
-                        color: "#FFAAAA"
-                        font.pixelSize: 14
-                    }
+                delegate: Rectangle {
+                    width: unitList.width
+                    height: 110
+                    color: "#444444"
+                    radius: 8
+                    border.width: 1
+                    border.color: "#555"
 
-                    Row {
-                        spacing: 15
+                    Column {
+                        anchors.centerIn: parent
+                        width: parent.width - 18
+                        spacing: 5
+
                         Text {
-                            text: "⚔ Útok: " + modelData.attackDamage
-                            color: "#AAAAFF"
+                            text: modelData.unitTypeName
+                            color: "white"
+                            font.bold: true
+                            font.pixelSize: 16
+                        }
+
+                        Text {
+                            text: "❤ Životy: " + modelData.health + " / " + modelData.maxHealth
+                            color: "#FFAAAA"
+                            font.pixelSize: 13
+                        }
+
+                        Row {
+                            spacing: 12
+                            Text {
+                                text: "⚔ Útok: " + modelData.attackDamage
+                                color: "#AAAAFF"
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                text: "➶ Dosah: " + modelData.attackRange
+                                color: "#AAFFAA"
+                                font.pixelSize: 12
+                            }
+                        }
+
+                        Text {
+                            text: "⟷ Pohyb: " + modelData.movementPoints + " / "
+                                  + modelData.movementRange
+                            color: "#DDDDDD"
                             font.pixelSize: 12
                         }
+
                         Text {
-                            text: "➶ Dosah útoku: " + modelData.attackRange
-                            color: "#AAFFAA"
+                            text: "🗡 Útok v tahu: "
+                                  + (modelData.hasAttacked ? "už použit" : "dostupný")
+                            color: modelData.hasAttacked ? "#ff9aa2" : "#b7ffb7"
                             font.pixelSize: 12
                         }
-                    }
-
-                    Text {
-                        text: "⟷ Pohyb: " + modelData.movementRange
-                        color: "#FFFF00"
-                        font.pixelSize: 12
                     }
                 }
+            }
+        }
+    }
+
+    Column {
+        id: bottomHud
+        anchors.top: mapGrid.bottom
+        anchors.horizontalCenter: mapGrid.horizontalCenter
+        anchors.topMargin: 40
+        spacing: 10
+        z: 80
+
+        Text {
+            text: controller.isPlayer1Turn ? "Hraje hráč 1" : "Hraje hráč 2"
+            font.pixelSize: 26
+            color: theme.textPrimary
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        MenuButton {
+            id: endTurnButton
+            text: "Ukončit tah"
+            enabled: !gameOver
+            onClicked: {
+                actionMode = "move"
+                controller.endTurn()
+            }
+        }
+    }
+
+    // Attack flash přes mapu.
+    Rectangle {
+        id: mapHitFlash
+        anchors.fill: mapGrid
+        z: 60
+        color: "#ff0000"
+        opacity: 0
+        visible: opacity > 0
+    }
+    SequentialAnimation {
+        id: mapHitFlashAnim
+        PropertyAnimation {
+            target: mapHitFlash
+            property: "opacity"
+            to: 0.45
+            duration: 70
+        }
+        PropertyAnimation {
+            target: mapHitFlash
+            property: "opacity"
+            to: 0.00
+            duration: 220
+        }
+    }
+
+    // hláška z controlleru
+    Rectangle {
+        id: toast
+        anchors.horizontalCenter: mapGrid.horizontalCenter
+        anchors.bottom: mapGrid.top
+        anchors.bottomMargin: 16
+        radius: 8
+        color: "#000000"
+        opacity: mapContainer.lastMoveMessage.length > 0 ? 0.7 : 0
+        visible: opacity > 0
+        z: 90
+        width: Math.min(mapGrid.width, 700)
+        height: msg.implicitHeight + 16
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 160
+            }
+        }
+
+        Text {
+            id: msg
+            anchors.centerIn: parent
+            width: parent.width - 24
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            text: mapContainer.lastMoveMessage
+            color: "white"
+            font.pixelSize: 14
+        }
+    }
+
+    // GAME OVER overlay
+    Rectangle {
+        anchors.fill: parent
+        z: 200
+        visible: gameOver
+        color: "#000000cc"
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 14
+
+            Text {
+                text: winnerText
+                color: "white"
+                font.pixelSize: 34
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            Text {
+                text: "Hra skončila."
+                color: "#dddddd"
+                font.pixelSize: 16
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            MenuButton {
+                text: "Zpět do menu"
+                onClicked: mapContainer.backRequested()
+            }
+        }
+    }
+    // PLAYER 1 UNITS
+    Repeater {
+        model: controller.unitRepository.player1Units
+
+        delegate: UnitPiece {
+            unitModel: modelData
+            isPlayer1Unit: true
+            unitColor: "red"
+            tileSize: mapContainer.tileSize
+            mapGridObj: mapGrid
+            actionMode: mapContainer.actionMode
+            gameOver: mapContainer.gameOver
+
+            onAttackSuccess: {
+                mapHitFlashAnim.restart()
+                controller.checkVictory()
+                mapContainer.actionMode = "move"
+            }
+        }
+    }
+
+    // PLAYER 2 UNITS
+    Repeater {
+        model: controller.unitRepository.player2Units
+
+        delegate: UnitPiece {
+            unitModel: modelData
+            isPlayer1Unit: false
+            unitColor: "blue"
+            tileSize: mapContainer.tileSize
+            mapGridObj: mapGrid
+            actionMode: mapContainer.actionMode
+            gameOver: mapContainer.gameOver
+            onAttackSuccess: {
+                mapHitFlashAnim.restart()
+                controller.checkVictory()
+                mapContainer.actionMode = "move"
             }
         }
     }

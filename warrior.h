@@ -8,9 +8,7 @@ class Warrior : public Unit
     Q_OBJECT
 
 public:
-    explicit Warrior(QPoint position, QObject *parent);
-
-    void attack() override;
+    Warrior(QPoint position, QObject *parent);
 };
 
 #endif // WARRIOR_H

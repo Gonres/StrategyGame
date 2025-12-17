@@ -1,12 +1,10 @@
 #include "game_map.h"
 
-GameMap::GameMap(unsigned int numberOfRows,
-                 unsigned int numberOfColumns,
+GameMap::GameMap(unsigned int numberOfRows, unsigned int numberOfColumns,
                  QObject *parent)
     : QObject(parent),
       m_rows(numberOfRows),
-      m_columns(numberOfColumns)
-{}
+      m_columns(numberOfColumns) {}
 
 GameMap::~GameMap()
 {
@@ -25,10 +23,10 @@ void GameMap::generateMap()
     m_grid.reserve(m_rows * m_columns);
 
     for (unsigned int i = 0; i < m_rows * m_columns; ++i) {
-        int r = QRandomGenerator::global()->bounded(100);
+        const int r = QRandomGenerator::global()->bounded(100);
         TileType::Type type;
 
-        if (r < 60) {
+        if (r < 70) {
             type = TileType::Grass;
         } else if (r < 80) {
             type = TileType::Watter;

@@ -1,7 +1,8 @@
 #include "tile.h"
 
 Tile::Tile(TileType::Type type, QObject *parent)
-    : QObject(parent), m_type(type) {}
+    : QObject(parent),
+      m_type(type) {}
 
 TileType::Type Tile::getType() const
 {
