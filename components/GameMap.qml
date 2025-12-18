@@ -244,7 +244,7 @@ Item {
         id: bottomHud
         anchors.top: mapGrid.bottom
         anchors.horizontalCenter: mapGrid.horizontalCenter
-        anchors.topMargin: 40
+        anchors.topMargin: 10
         spacing: 10
         z: 80
 
