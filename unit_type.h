@@ -7,9 +7,10 @@ namespace UnitType {
 Q_NAMESPACE
 
 enum Type {
-    warrior,
-    archer,
-    cavalry
+    Warrior,
+    Archer,
+    Cavalry,
+    Stronghold,
 };
 Q_ENUM_NS(Type)
 };

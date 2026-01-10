@@ -1,13 +1,14 @@
 #include "game_controller.h"
 #include "archer.h"
 #include "warrior.h"
+#include "stronghold.h"
 
 #include <cavalry.h>
 
 GameController::GameController(QObject *parent)
     : QObject{parent},
       m_running(false),
-      m_map(GameMap(20, 20, this)),
+      m_map(GameMap(33, 35, this)),
       m_unitRepository(new UnitRepository(this)),
       m_action(m_unitRepository, &m_map, this),
       m_isPlayer1Turn(true) {}
@@ -49,6 +50,7 @@ void GameController::startGame()
     int midRow = m_map.getRows() / 2;
     int lastCol = m_map.getColumns() - 1;
 
+    m_unitRepository->addPlayer1Unit(new Stronghold(QPoint{5, 5}, this));
     m_unitRepository->addPlayer1Unit(new Warrior(QPoint{0, midRow}, this));
     m_unitRepository->addPlayer1Unit(new Cavalry(QPoint{0, midRow - 1}, this));
     m_unitRepository->addPlayer1Unit(new Warrior(QPoint{0, midRow + 1}, this));

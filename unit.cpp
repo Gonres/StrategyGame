@@ -3,10 +3,10 @@
 #include "cavalry.h"
 #include "warrior.h"
 
-Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
+Unit::Unit(UnitType::Type type, int maxHealth, int attackDamage,
            int attackRange, int movementRange, QPoint position, QObject *parent)
     : m_unitType(type),
-      m_health(health),
+      m_health(maxHealth),
       m_maxHealth(maxHealth),
       m_attackDamage(attackDamage),
       m_attackRange(attackRange),
@@ -15,16 +15,31 @@ Unit::Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
       m_hasAttacked(false),
       m_position(position),
       m_unitSelected(false),
+      m_isBuilding(false),
+      QObject(parent) {}
+
+Unit::Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent)
+    : m_unitType(type),
+      m_health(maxHealth),
+      m_maxHealth(maxHealth),
+      m_attackDamage(0),
+      m_attackRange(0),
+      m_movementRange(0),
+      m_movementPoints(type == UnitType::Stronghold ? 5 : 0),
+      m_hasAttacked(false),
+      m_position(position),
+      m_unitSelected(false),
+      m_isBuilding(true),
       QObject(parent) {}
 
 Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
 {
     switch (unitType) {
-    case UnitType::warrior:
+    case UnitType::Warrior:
         return new Warrior(position, parent);
-    case UnitType::archer:
+    case UnitType::Archer:
         return new Archer(position, parent);
-    case UnitType::cavalry:
+    case UnitType::Cavalry:
         return new Cavalry(position, parent);
     default:
         return nullptr;
@@ -39,6 +54,11 @@ UnitType::Type Unit::getUnitType() const
 bool Unit::hasAttacked() const
 {
     return m_hasAttacked;
+}
+
+bool Unit::isBuilding() const
+{
+    return m_isBuilding;
 }
 
 void Unit::resetMovement()
@@ -148,13 +168,15 @@ void Unit::setUnitSelected(bool selected)
 
 QString Unit::unitTypeToString() const
 {
-    switch (static_cast<UnitType::Type>(m_unitType)) {
-    case UnitType::Type::warrior:
+    switch (m_unitType) {
+    case UnitType::Warrior:
         return "Válečník";
-    case UnitType::Type::archer:
+    case UnitType::Archer:
         return "Lučištník";
-    case UnitType::Type::cavalry:
+    case UnitType::Cavalry:
         return "Jezdec";
+    case UnitType::Stronghold:
+        return "Pevnost";
     default:
         return "Unknown";
     }

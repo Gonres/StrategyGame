@@ -29,7 +29,7 @@ void GameMap::generateMap()
         if (r < 70) {
             type = TileType::Grass;
         } else if (r < 80) {
-            type = TileType::Watter;
+            type = TileType::Water;
         } else if (r < 95) {
             type = TileType::Mountain;
         } else {

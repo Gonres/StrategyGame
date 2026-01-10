@@ -21,10 +21,16 @@ class Unit : public QObject
     Q_PROPERTY(QString unitTypeName READ unitTypeToString CONSTANT)
     Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
     Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
+    Q_PROPERTY(bool isBuilding READ isBuilding CONSTANT)
 
 protected:
-    Unit(UnitType::Type type, int health, int maxHealth, int attackDamage,
+    // Normal movable unit
+    Unit(UnitType::Type type, int maxHealth, int attackDamage,
          int attackRange, int movementRange, QPoint position, QObject *parent);
+
+    // Non movable building
+    Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent);
+
 public:
     static Unit *create(UnitType::Type unitType, QPoint position,
                         QObject *parent);
@@ -39,6 +45,7 @@ public:
     QPoint getPosition() const;
     bool isUnitSelected() const;
     bool hasAttacked() const;
+    bool isBuilding() const;
     QString unitTypeToString() const;
 
     void setHealth(int newHealth);
@@ -70,6 +77,7 @@ private:
     bool m_hasAttacked;
     QPoint m_position;
     bool m_unitSelected;
+    bool m_isBuilding;
 };
 
 #endif // UNIT_H

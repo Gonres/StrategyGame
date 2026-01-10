@@ -1,3 +1,4 @@
+#include "action_mode.h"
 #include "game_controller.h"
 #include "tile_type.h"
 #include "unit_type.h"
@@ -18,6 +19,9 @@ int main(int argc, char *argv[])
     // UnitType enum pro QML
     qmlRegisterUncreatableMetaObject(UnitType::staticMetaObject, "StrategyGame",
                                      1, 0, "UnitType", "UnitType is an enum");
+
+    qmlRegisterUncreatableMetaObject(ActionMode::staticMetaObject, "StrategyGame",
+                                     1, 0, "ActionMode", "ActionMode is an enum");
 
     GameController controller;
 

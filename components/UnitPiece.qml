@@ -9,16 +9,17 @@ Rectangle {
 
     // Configuration
     property bool isPlayer1Unit: true
-    property string unitColor: "red"     // můžeš nechat, ale níž to přebarvím přes theme
+    property string unitColor: "red" // můžeš nechat, ale níž to přebarvím přes theme
     property int tileSize: 35
     property var mapGridObj
 
-    property string actionMode: "move"
     property bool gameOver: false
 
     signal attackSuccess
 
-    Style.Theme { id: theme }
+    Style.Theme {
+        id: theme
+    }
 
     width: tileSize
     height: tileSize
@@ -28,13 +29,16 @@ Rectangle {
     color: (isPlayer1Unit ? theme.unitP1 : theme.unitP2) || unitColor
 
     border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
-    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
+    border.color: (unitModel
+                   && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
     z: 20
 
     // Internal state
     property point originalPos: Qt.point(0, 0)
-    readonly property bool isOwnerTurn: (isPlayer1Unit && controller.isPlayer1Turn)
-                                        || (!isPlayer1Unit && !controller.isPlayer1Turn)
+    readonly property bool isOwnerTurn: (isPlayer1Unit
+                                         && controller.isPlayer1Turn)
+                                        || (!isPlayer1Unit
+                                            && !controller.isPlayer1Turn)
 
     // Move Animation
     Rectangle {
@@ -140,17 +144,16 @@ Rectangle {
 
     // position binding
     function bindToModel() {
-        if (!mapGridObj) return
+        if (!mapGridObj)
+            return
 
         root.x = Qt.binding(function () {
-            return (unitModel && mapGridObj)
-                    ? mapGridObj.x + unitModel.position.x * tileSize
-                    : 0
+            return (unitModel
+                    && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
         })
         root.y = Qt.binding(function () {
-            return (unitModel && mapGridObj)
-                    ? mapGridObj.y + unitModel.position.y * tileSize
-                    : 0
+            return (unitModel
+                    && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
         })
     }
 
@@ -165,8 +168,9 @@ Rectangle {
         enabled: !gameOver
 
         // Drag enabled only if it's owner's turn, move mode, unit selected, and has movement points
-        drag.target: (unitModel && isOwnerTurn && actionMode === "move"
-                      && unitModel.unitSelected
+        drag.target: (unitModel && isOwnerTurn
+                      && controller.action.mode === ActionMode.Move
+                      && unitModel.unitSelected && !unitModel.isBuilding
                       && unitModel.movementPoints > 0) ? root : null
         drag.axis: Drag.XAndYAxis
 
@@ -179,17 +183,18 @@ Rectangle {
             if (isOwnerTurn) {
                 controller.action.clearSelection()
                 controller.action.addToSelection(unitModel)
+                controller.action.mode = ActionMode.Move
             }
             if (drag.active) {
                 root.originalPos = Qt.point(root.x, root.y)
-                // “odvázání” bindingu řešíš tím, že při drag aktivním nastavíš přímo x/y
+                // odvázání bindingu řešíš tím, že při drag aktivním nastavíš přímo x/y
                 root.x = root.x
                 root.y = root.y
             }
         }
 
         onClicked: {
-            if (!isOwnerTurn && actionMode === "attack") {
+            if (!isOwnerTurn && controller.action.mode === ActionMode.Attack) {
                 let canAttack = controller.action.tryAttack(unitModel)
                 if (canAttack) {
                     hitAnim.restart()
@@ -210,12 +215,13 @@ Rectangle {
                     root.x = mapGridObj.x + col * tileSize
                     root.y = mapGridObj.y + row * tileSize
                     root.bindToModel()
-                    // moveAnim.restart() // pokud chceš vizuální efekt při úspěšném move
+                    // moveAnim.restart() // vizuální efekt při úspěšném move
                 } else {
                     root.x = root.originalPos.x
                     root.y = root.originalPos.y
                     root.bindToModel()
                 }
+                controller.action.reachableTilesChanged()
             }
         }
     }

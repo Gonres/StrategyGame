@@ -2,9 +2,10 @@
 #include <cmath>
 
 Action::Action(UnitRepository *unitRepository, GameMap *map, QObject *parent)
-    : m_unitRepository(unitRepository),
+    : QObject{parent},
+      m_unitRepository(unitRepository),
       m_map(map),
-      QObject{parent} {}
+      m_mode(ActionMode::Move) {}
 
 QList<Unit *> Action::getSelectedUnits() const
 {
@@ -36,12 +37,26 @@ void Action::resetTurnForCurrentPlayer(bool isPlayer1Turn)
     QList<Unit *> units = isPlayer1Turn ? m_unitRepository->player1Units()
                           : m_unitRepository->player2Units();
     for (Unit *unit : units) {
-        if (!unit) {
+        if (!unit || unit->isBuilding()) {
             continue;
         }
         unit->resetMovement();
         unit->resetAttack();
     }
+}
+
+void Action::setMode(ActionMode::Mode mode)
+{
+    if (m_mode == mode) {
+        return;
+    }
+    m_mode = mode;
+    emit modeChanged(mode);
+}
+
+ActionMode::Mode Action::mode() const
+{
+    return m_mode;
 }
 
 bool Action::tryMoveSelectedTo(int col, int row)
@@ -61,7 +76,8 @@ bool Action::tryMoveSelectedTo(int col, int row)
         emit actionMessage("Nelze se tam dostat!");
         return false;
     }
-    int dist = qAbs(unit->getPosition().x() - col) + qAbs(unit->getPosition().y() - row);
+    int dist =
+        qAbs(unit->getPosition().x() - col) + qAbs(unit->getPosition().y() - row);
 
     if (dist > unit->getMovementPoints()) {
         emit actionMessage("Nedostatek bodů pohybu!");
@@ -70,7 +86,7 @@ bool Action::tryMoveSelectedTo(int col, int row)
 
     int index = m_map->getIndex(col, row);
     Tile *tile = m_map->getTiles().at(index);
-    if (tile->getType() == TileType::Watter) {
+    if (tile->getType() == TileType::Water) {
         emit actionMessage("Nemůžeš chodit na vodě!");
         return false;
     }
@@ -114,44 +130,45 @@ bool Action::tryAttack(Unit *target)
     return true;
 }
 
-// // highlight
-// QVariantList Action::reachableTiles()
-// {
-//     QVariantList tiles;
-//     if (m_selectedUnits.isEmpty()) {
-//         return tiles;
-//     }
+// highlight
+QVariantList Action::reachableTiles()
+{
+    QVariantList tiles;
+    if (m_selectedUnits.isEmpty()) {
+        return tiles;
+    }
 
-//     Unit *unit = m_selectedUnits.first();
-//     int mp = unit->getMovementPoints();
-//     QPoint start = unit->getPosition();
+    Unit *unit = m_selectedUnits.first();
+    int mp = unit->getMovementPoints();
+    QPoint start = unit->getPosition();
 
-//     // Scan area
-//     for (int x = start.x() - mp; x <= start.x() + mp; ++x) {
-//         for (int y = start.y() - mp; y <= start.y() + mp; ++y) {
+    // Scan area
+    for (int x = start.x() - mp; x <= start.x() + mp; ++x) {
+        for (int y = start.y() - mp; y <= start.y() + mp; ++y) {
 
-//             if (x < 0 || y < 0 || x >= m_map->getColumns() || y >= m_map->getRows()) {
-//                 continue;
-//             }
+            if (x < 0 || y < 0 || x >= m_map->getColumns() || y >=
+                    m_map->getRows()) {
+                continue;
+            }
 
-//             int dist = qAbs(x - start.x()) + qAbs(y - start.y());
-//             if (dist > 0 && dist <= mp) {
-//                 // Check Terrain
-//                 int index = m_map->getIndex(x, y);
-//                 Tile *tile = m_map->getTiles().at(index);
-//                 if (tile->getType() == TileType::Watter) {
-//                     continue;
-//                 }
+            int dist = qAbs(x - start.x()) + qAbs(y - start.y());
+            if (dist > 0 && dist <= mp) {
+                // Check Terrain
+                int index = m_map->getIndex(x, y);
+                Tile *tile = m_map->getTiles().at(index);
+                if (tile->getType() == TileType::Water) {
+                    continue;
+                }
 
-//                 // Only add empty tiles to the highlight
-//                 if (!m_unitRepository->getUnitAt(QPoint(x, y))) {
-//                     QVariantMap tileData;
-//                     tileData["x"] = x;
-//                     tileData["y"] = y;
-//                     tiles.append(tileData);
-//                 }
-//             }
-//         }
-//     }
-//     return tiles;
-// }
+                // Only add empty tiles to the highlight
+                if (!m_unitRepository->getUnitAt(QPoint(x, y))) {
+                    QVariantMap tileData;
+                    tileData["x"] = x;
+                    tileData["y"] = y;
+                    tiles.append(tileData);
+                }
+            }
+        }
+    }
+    return tiles;
+}

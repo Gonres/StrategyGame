@@ -14,7 +14,7 @@ QString Tile::getColor() const
     switch (m_type) {
     case TileType::Grass:
         return "#4caf50";
-    case TileType::Watter:
+    case TileType::Water:
         return "#2196f3";
     case TileType::Mountain:
         return "#8d6e63";

@@ -8,7 +8,7 @@ Q_NAMESPACE
 
 enum Type {
     Grass,
-    Watter,
+    Water,
     Mountain,
     Sand
 };
