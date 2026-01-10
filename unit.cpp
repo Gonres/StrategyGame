@@ -1,7 +1,10 @@
 #include "unit.h"
 #include "archer.h"
+#include "barracks.h"
 #include "cavalry.h"
 #include "warrior.h"
+
+#include <stronghold.h>
 
 Unit::Unit(UnitType::Type type, int maxHealth, int attackDamage,
            int attackRange, int movementRange, QPoint position, QObject *parent)
@@ -41,6 +44,10 @@ Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
         return new Archer(position, parent);
     case UnitType::Cavalry:
         return new Cavalry(position, parent);
+    case UnitType::Stronghold:
+        return new Stronghold(position, parent);
+    case UnitType::Barracks:
+        return new Barracks(position, parent);
     default:
         return nullptr;
     }
@@ -177,6 +184,8 @@ QString Unit::unitTypeToString() const
         return "Jezdec";
     case UnitType::Stronghold:
         return "Pevnost";
+    case UnitType::Barracks:
+        return "Kasárny";
     default:
         return "Unknown";
     }

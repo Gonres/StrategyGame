@@ -11,6 +11,7 @@ enum Type {
     Archer,
     Cavalry,
     Stronghold,
+    Barracks
 };
 Q_ENUM_NS(Type)
 };

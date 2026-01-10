@@ -18,11 +18,11 @@ public:
     QList<Unit *> player1Units() const;
     QList<Unit *> player2Units() const;
 
-    void addPlayer1Unit(Unit *unit);
-    void addPlayer2Unit(Unit *unit);
     void removeUnit(Unit *unit);
     void clearUnits();
 
+    Q_INVOKABLE void addPlayer1Unit(UnitType::Type unitType, QPoint position);
+    Q_INVOKABLE void addPlayer2Unit(UnitType::Type unitType, QPoint position);
     Q_INVOKABLE Unit *getUnitAt(QPoint position) const;
 
 signals:

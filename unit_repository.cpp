@@ -12,15 +12,15 @@ QList<Unit *> UnitRepository::player2Units() const
     return m_player2Units;
 }
 
-void UnitRepository::addPlayer1Unit(Unit *unit)
+void UnitRepository::addPlayer1Unit(UnitType::Type unitType, QPoint position)
 {
-    m_player1Units.append(unit);
+    m_player1Units.append(Unit::create(unitType, position, parent()));
     emit player1UnitsChanged();
 }
 
-void UnitRepository::addPlayer2Unit(Unit *unit)
+void UnitRepository::addPlayer2Unit(UnitType::Type unitType, QPoint position)
 {
-    m_player2Units.append(unit);
+    m_player2Units.append(Unit::create(unitType, position, parent()));
     emit player2UnitsChanged();
 }
 

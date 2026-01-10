@@ -5,7 +5,8 @@ Action::Action(UnitRepository *unitRepository, GameMap *map, QObject *parent)
     : QObject{parent},
       m_unitRepository(unitRepository),
       m_map(map),
-      m_mode(ActionMode::Move) {}
+      m_mode(ActionMode::Move),
+      m_chosenBuildType(UnitType::Barracks) {}
 
 QList<Unit *> Action::getSelectedUnits() const
 {
@@ -59,6 +60,11 @@ ActionMode::Mode Action::mode() const
     return m_mode;
 }
 
+UnitType::Type Action::chosenBuildType() const
+{
+    return m_chosenBuildType;
+}
+
 bool Action::tryMoveSelectedTo(int col, int row)
 {
     if (m_selectedUnits.isEmpty()) {
@@ -103,6 +109,10 @@ bool Action::tryAttack(Unit *target)
         return false;
     }
     Unit *attacker = m_selectedUnits.first();
+
+    if (attacker->isBuilding()) {
+        return false;
+    }
 
     QPoint p1 = attacker->getPosition();
     QPoint p2 = target->getPosition();
@@ -171,4 +181,12 @@ QVariantList Action::reachableTiles()
         }
     }
     return tiles;
+}
+
+void Action::setchosenBuildType(UnitType::Type type)
+{
+    if (m_chosenBuildType != type) {
+        m_chosenBuildType = type;
+        emit chosenBuildTypeChanged();
+    }
 }

@@ -50,16 +50,13 @@ void GameController::startGame()
     int midRow = m_map.getRows() / 2;
     int lastCol = m_map.getColumns() - 1;
 
-    m_unitRepository->addPlayer1Unit(new Stronghold(QPoint{5, 5}, this));
-    m_unitRepository->addPlayer1Unit(new Warrior(QPoint{0, midRow}, this));
-    m_unitRepository->addPlayer1Unit(new Cavalry(QPoint{0, midRow - 1}, this));
-    m_unitRepository->addPlayer1Unit(new Warrior(QPoint{0, midRow + 1}, this));
+    m_unitRepository->addPlayer1Unit(UnitType::Stronghold, QPoint{5, 5});
+    m_unitRepository->addPlayer2Unit(UnitType::Stronghold, QPoint{29, 27});
+    m_unitRepository->addPlayer1Unit(UnitType::Warrior, QPoint{0, midRow});
+    m_unitRepository->addPlayer1Unit(UnitType::Cavalry, QPoint{0, midRow - 1});
+    m_unitRepository->addPlayer1Unit(UnitType::Warrior, QPoint{0, midRow + 1});
 
-    m_unitRepository->addPlayer2Unit(new Archer(QPoint{lastCol, midRow}, this));
-    m_unitRepository->addPlayer2Unit(
-        new Archer(QPoint{lastCol, midRow - 1}, this));
-    m_unitRepository->addPlayer2Unit(
-        new Archer(QPoint{lastCol, midRow + 1}, this));
+
 }
 
 void GameController::stopGame()

@@ -122,7 +122,16 @@ Item {
 
                     onClicked: {
                         if (controller.action.mode === ActionMode.Build) {
-
+                            controller.isPlayer1Turn ? controller.unitRepository.addPlayer1Unit(
+                                                           controller.action.chosenBuildType,
+                                                           Qt.point(
+                                                               modelData.x,
+                                                               modelData.y)) : controller.unitRepository.addPlayer2Unit(
+                                                           controller.action.chosenBuildType,
+                                                           Qt.point(
+                                                               modelData.x,
+                                                               modelData.y))
+                            controller.action.mode = ActionMode.Move
                         }
                     }
                 }

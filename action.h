@@ -15,6 +15,8 @@ class Action : public QObject
     Q_PROPERTY(QList<Unit *> selectedUnits READ getSelectedUnits NOTIFY selectionChanged)
     Q_PROPERTY(ActionMode::Mode mode READ mode WRITE setMode NOTIFY modeChanged)
     Q_PROPERTY(QVariantList reachableTiles READ reachableTiles NOTIFY reachableTilesChanged)
+    Q_PROPERTY(UnitType::Type chosenBuildType READ chosenBuildType WRITE setchosenBuildType NOTIFY
+               chosenBuildTypeChanged)
 
 public:
     Action(UnitRepository *unitRepository, GameMap *map, QObject *parent = nullptr);
@@ -23,7 +25,10 @@ public:
     void resetTurnForCurrentPlayer(bool isPlayer1Turn);
     void setMode(ActionMode::Mode mode);
     ActionMode::Mode mode() const;
+    UnitType::Type chosenBuildType() const;
     QVariantList reachableTiles();
+
+    void setchosenBuildType(UnitType::Type type);
 
     Q_INVOKABLE void clearSelection();
     Q_INVOKABLE void addToSelection(Unit *unit);
@@ -34,6 +39,7 @@ signals:
     void selectionChanged();
     void actionMessage(QString msg);
     void modeChanged(ActionMode::Mode);
+    void chosenBuildTypeChanged();
     void reachableTilesChanged();
 
 private:
@@ -41,6 +47,7 @@ private:
     UnitRepository *m_unitRepository;
     GameMap *m_map;
     ActionMode::Mode m_mode;
+    UnitType::Type m_chosenBuildType;
 };
 
 #endif // ACTION_H
