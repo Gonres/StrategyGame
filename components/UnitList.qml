@@ -25,6 +25,19 @@ ListView {
         border.width: 1
         border.color: theme.cardBorder
 
+        function spawnUnit(unitType) {
+            // 1. Calculate the spawn position (Player 1 = below, Player 2 = above)
+            var yOffset = controller.isPlayer1Turn ? 1 : -1
+            var spawnPoint = Qt.point(modelData.position.x,
+                                      modelData.position.y + yOffset)
+
+            if (controller.isPlayer1Turn) {
+                controller.unitRepository.addPlayer1Unit(unitType, spawnPoint)
+            } else {
+                controller.unitRepository.addPlayer2Unit(unitType, spawnPoint)
+            }
+        }
+
         Column {
             anchors.centerIn: parent
             width: parent.width - 18
@@ -76,6 +89,7 @@ ListView {
                 visible: modelData.unitType === UnitType.Stronghold
                 Button {
                     highlighted: controller.action.mode === ActionMode.Build
+                                 && controller.action.chosenBuildType === UnitType.Barracks
                     hoverEnabled: true
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Kasárny")
@@ -85,37 +99,48 @@ ListView {
                         controller.action.chosenBuildType = UnitType.Barracks
                     }
                 }
-                // Dalsi budouci budovy
-                // Button {
-                //     highlighted: controller.action.mode === ActionMode.Build
-                //     hoverEnabled: true
-                //     ToolTip.visible: hovered
-                //     ToolTip.text: qsTr("Stáje")
-                //     width: 25
-                //     onPressed: {
-                //         controller.action.mode = ActionMode.Build
-                //         controller.action.chosenBuildType = UnitType.Stables
-                //     }
-                // }
+
+                Button {
+                    highlighted: controller.action.mode === ActionMode.Build
+                                 && controller.action.chosenBuildType === UnitType.Stables
+                    hoverEnabled: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Stáje")
+                    width: 25
+                    onPressed: {
+                        controller.action.mode = ActionMode.Build
+                        controller.action.chosenBuildType = UnitType.Stables
+                    }
+                }
             }
 
             Row {
                 visible: modelData.unitType === UnitType.Barracks
                 Button {
-                    highlighted: controller.action.mode === ActionMode.Build
                     hoverEnabled: true
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Válečník")
                     width: 25
-                    onPressed: controller.isPlayer1Turn ? controller.unitRepository.addPlayer1Unit(
-                                                              UnitType.Warrior,
-                                                              Qt.point(
-                                                                  modelData.position.x,
-                                                                  modelData.position.y + 1)) : controller.unitRepository.addPlayer2Unit(
-                                                              UnitType.Warrior,
-                                                              Qt.point(
-                                                                  modelData.position.x,
-                                                                  modelData.position.y - 1))
+                    onPressed: spawnUnit(UnitType.Warrior)
+                }
+
+                Button {
+                    hoverEnabled: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Lučištník")
+                    width: 25
+                    onPressed: spawnUnit(UnitType.Archer)
+                }
+            }
+
+            Row {
+                visible: modelData.unitType === UnitType.Stables
+                Button {
+                    hoverEnabled: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Jezdec")
+                    width: 25
+                    onPressed: spawnUnit(UnitType.Cavalry)
                 }
             }
         }
