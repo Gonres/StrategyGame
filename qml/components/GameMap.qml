@@ -7,7 +7,9 @@ Item {
     id: mapContainer
     signal backRequested
 
-    Style.Theme { id: theme }
+    Style.Theme {
+        id: theme
+    }
 
     property int baseTileSize: 35
     property int minTileSize: 20
@@ -16,10 +18,8 @@ Item {
     property int sidePanelWidth: 320
     property int messageBarHeight: 48
 
-    property var selectedUnit:
-        controller.action.selectedUnits.length > 0
-            ? controller.action.selectedUnits[0]
-            : null
+    property var selectedUnit: controller.action.selectedUnits.length
+                               > 0 ? controller.action.selectedUnits[0] : null
 
     property bool gameOver: controller.winnerText !== ""
     property string winnerText: controller.winnerText
@@ -27,11 +27,16 @@ Item {
 
     function colorForPlayer(pid) {
         switch (pid) {
-        case 0: return theme.unitP1
-        case 1: return theme.unitP2
-        case 2: return theme.unitP3
-        case 3: return theme.unitP4
-        default: return theme.unitP1
+        case 0:
+            return theme.unitP1
+        case 1:
+            return theme.unitP2
+        case 2:
+            return theme.unitP3
+        case 3:
+            return theme.unitP4
+        default:
+            return theme.unitP1
         }
     }
 
@@ -51,7 +56,9 @@ Item {
 
     Connections {
         target: controller.unitRepository
-        function onUnitsChanged() { controller.checkVictory() }
+        function onUnitsChanged() {
+            controller.checkVictory()
+        }
     }
 
     // =====================================================
@@ -105,8 +112,8 @@ Item {
                     enabled: !gameOver
                     onClicked: {
                         if (controller) {
-                            controller.action.clearSelection()
                             controller.action.mode = ActionMode.Move
+                            controller.action.clearSelection()
                         }
                         backRequested()
                     }
@@ -119,7 +126,8 @@ Item {
                 }
 
                 Text {
-                    text: "Hraje: Hráč " + (controller.currentPlayerId + 1) + " / " + controller.playerCount
+                    text: "Hraje: Hráč " + (controller.currentPlayerId + 1)
+                          + " / " + controller.playerCount
                     color: theme.textMuted
                     font.pixelSize: 14
                 }
@@ -137,7 +145,9 @@ Item {
                     font.pixelSize: 12
                 }
 
-                Item { Layout.fillHeight: true }
+                Item {
+                    Layout.fillHeight: true
+                }
             }
         }
 
@@ -150,22 +160,18 @@ Item {
             Layout.fillHeight: true
 
             property int tileSize: {
-                if (!controller.map) return baseTileSize
+                if (!controller.map)
+                    return baseTileSize
                 let cols = controller.map.columns
                 let rows = controller.map.rows
 
-                let reservedH = messageBarHeight
-                                + endTurnButton.height
-                                + 24
+                let reservedH = messageBarHeight + endTurnButton.height + 24
 
                 let availW = width
                 let availH = height - reservedH
 
-                let s = Math.min(
-                    Math.floor(availW / cols),
-                    Math.floor(availH / rows),
-                    baseTileSize
-                )
+                let s = Math.min(Math.floor(availW / cols),
+                                 Math.floor(availH / rows), baseTileSize)
                 return Math.max(minTileSize, s)
             }
 
@@ -183,12 +189,12 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     radius: 8
                     color: theme.toastBg
-                    opacity: lastMoveMessage.length > 0
-                             ? theme.toastOpacity
-                             : 0
+                    opacity: lastMoveMessage.length > 0 ? theme.toastOpacity : 0
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 160 }
+                        NumberAnimation {
+                            duration: 160
+                        }
                     }
 
                     Text {
@@ -233,24 +239,24 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         z: 5
-                        enabled: !gameOver && (controller.action.selectedUnits.length > 0
-                                 || controller.action.reachableTiles.length > 0)
+                        enabled: !gameOver
+                                 && (controller.action.selectedUnits.length > 0
+                                     || controller.action.reachableTiles.length > 0)
                         onClicked: {
-                            controller.action.clearSelection()
                             controller.action.mode = ActionMode.Move
+                            controller.action.clearSelection()
                         }
                     }
 
                     // ---------- Reachable highlights ----------
                     Repeater {
-                        model: !gameOver && selectedUnit &&
-                               (
-                                   (controller.action.mode === ActionMode.Move && !selectedUnit.isBuilding) ||
-                                   (controller.action.mode === ActionMode.Build && selectedUnit.isBuilding) ||
-                                   (controller.action.mode === ActionMode.Train && selectedUnit.isBuilding)
-                               )
-                               ? controller.action.reachableTiles
-                               : []
+                        model: !gameOver && selectedUnit
+                               && ((controller.action.mode === ActionMode.Move
+                                    && !selectedUnit.isBuilding)
+                                   || (controller.action.mode === ActionMode.Build
+                                       && selectedUnit.isBuilding)
+                                   || (controller.action.mode === ActionMode.Train
+                                       && selectedUnit.isBuilding)) ? controller.action.reachableTiles : []
 
                         delegate: Item {
                             width: centerArea.tileSize
@@ -272,20 +278,25 @@ Item {
                                 enabled: !gameOver
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (controller.action.mode === ActionMode.Build) {
-                                        let ok = controller.tryBuildAt(modelData.x, modelData.y)
+                                    var ctrl = controller
+                                    if (ctrl.action.mode === ActionMode.Build) {
+                                        let ok = ctrl.tryBuildAt(modelData.x,
+                                                                 modelData.y)
                                         if (ok) {
-                                            controller.action.clearSelection()
-                                            controller.action.mode = ActionMode.Move
+                                            ctrl.action.clearSelection()
+                                            ctrl.action.mode = ActionMode.Move
                                         }
-                                    } else if (controller.action.mode === ActionMode.Train) {
-                                        let ok2 = controller.tryTrainAt(modelData.x, modelData.y)
+                                    } else if (ctrl.action.mode === ActionMode.Train) {
+                                        let ok2 = ctrl.tryTrainAt(modelData.x,
+                                                                  modelData.y)
                                         if (ok2) {
-                                            controller.action.clearSelection()
-                                            controller.action.mode = ActionMode.Move
+                                            ctrl.action.clearSelection()
+                                            ctrl.action.mode = ActionMode.Move
                                         }
-                                    } else if (controller.action.mode === ActionMode.Move) {
-                                        controller.action.tryMoveSelectedTo(Qt.point(modelData.x, modelData.y))
+                                    } else if (ctrl.action.mode === ActionMode.Move) {
+                                        ctrl.action.tryMoveSelectedTo(
+                                                    Qt.point(modelData.x,
+                                                             modelData.y))
                                     }
                                 }
                             }
@@ -313,8 +324,8 @@ Item {
 
                             onAttackSuccess: {
                                 mapHitFlashAnim.restart()
-                                controller.checkVictory()
                                 controller.action.mode = ActionMode.Move
+                                controller.checkVictory()
                             }
                         }
                     }
@@ -329,8 +340,8 @@ Item {
                     text: "Konec kola"
                     enabled: !gameOver
                     onClicked: {
-                        controller.action.clearSelection()
                         controller.action.mode = ActionMode.Move
+                        controller.action.clearSelection()
                         controller.endTurn()
                     }
                 }
@@ -372,8 +383,18 @@ Item {
     // Flash anim
     SequentialAnimation {
         id: mapHitFlashAnim
-        PropertyAnimation { target: mapHitFlash; property: "opacity"; to: 0.45; duration: 70 }
-        PropertyAnimation { target: mapHitFlash; property: "opacity"; to: 0.00; duration: 220 }
+        PropertyAnimation {
+            target: mapHitFlash
+            property: "opacity"
+            to: 0.45
+            duration: 70
+        }
+        PropertyAnimation {
+            target: mapHitFlash
+            property: "opacity"
+            to: 0.00
+            duration: 220
+        }
     }
 
     // =====================================================
@@ -387,7 +408,11 @@ Item {
         color: "#000000"
         opacity: 0.65
 
-        Behavior on opacity { NumberAnimation { duration: 180 } }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 180
+            }
+        }
 
         // blokace kliků
         MouseArea {
@@ -409,8 +434,16 @@ Item {
             // jednoduchý "pop" efekt
             scale: victoryOverlay.visible ? 1.0 : 0.92
             opacity: victoryOverlay.visible ? 1.0 : 0.0
-            Behavior on scale { NumberAnimation { duration: 180 } }
-            Behavior on opacity { NumberAnimation { duration: 180 } }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 180
+                }
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 180
+                }
+            }
 
             Column {
                 anchors.fill: parent
@@ -451,7 +484,10 @@ Item {
                     wrapMode: Text.WordWrap
                 }
 
-                Item { height: 6; width: 1 }
+                Item {
+                    height: 6
+                    width: 1
+                }
 
                 Row {
                     spacing: 12
