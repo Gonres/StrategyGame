@@ -1,7 +1,7 @@
-#include "action_mode.h"
-#include "game_controller.h"
-#include "tile_type.h"
-#include "unit_type.h"
+#include "game/action_mode.h"
+#include "game/game_controller.h"
+#include "map/tile_type.h"
+#include "entities/units/unit_type.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -31,9 +31,9 @@ int main(int argc, char *argv[])
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
-    []() {
-        QCoreApplication::exit(-1);
-    }, Qt::QueuedConnection);
+        []() {
+            QCoreApplication::exit(-1);
+        }, Qt::QueuedConnection);
 
     engine.loadFromModule("StrategyGame", "Main");
 

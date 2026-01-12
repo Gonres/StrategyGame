@@ -4,12 +4,11 @@ project(StrategyGame VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Quick Core)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
+# main.cpp je v rootu
 qt_add_executable(appStrategyGame
     main.cpp
 )
@@ -17,50 +16,69 @@ qt_add_executable(appStrategyGame
 qt_add_qml_module(appStrategyGame
     URI StrategyGame
     VERSION 1.0
+
     QML_FILES
-        Main.qml
+        qml/Main.qml
 
-        components/MenuButton.qml
-        components/MainMenu.qml
-        components/NewGameMenu.qml
-        components/SettingsMenu.qml
+        qml/style/Theme.qml
 
-        style/Theme.qml
-        SOURCES
-        SOURCES game_controller.h game_controller.cpp
-        SOURCES tile_type.h
-        SOURCES tile.h
-        SOURCES tile.cpp
-        SOURCES game_map.h
-        SOURCES game_map.cpp
-        QML_FILES components/GameMap.qml
-        SOURCES unit.h
-        SOURCES unit_type.h
-        SOURCES unit.cpp
-        SOURCES warrior.h
-        SOURCES warrior.cpp
-        SOURCES archer.h
-        SOURCES archer.cpp
-        SOURCES cavalry.h
-        SOURCES cavalry.cpp
-        QML_FILES components/UnitPiece.qml
+        qml/components/MenuButton.qml
+        qml/components/GameMap.qml
+        qml/components/UnitList.qml
+        qml/components/UnitPiece.qml
 
-        SOURCES
-        SOURCES action.h action.cpp
-        SOURCES unit_repository.h unit_repository.cpp
-        SOURCES stronghold.h stronghold.cpp
-        QML_FILES components/UnitList.qml
-        SOURCES
-        SOURCES action_mode.h
-        SOURCES barracks.h barracks.cpp
-        SOURCES stables.h stables.cpp
+        qml/screens/MainMenu.qml
+        qml/screens/NewGameMenu.qml
+        qml/screens/SettingsMenu.qml
+
+    SOURCES
+        # --- game ---
+        game/game_controller.h
+        game/game_controller.cpp
+        game/action.h
+        game/action.cpp
+        game/action_mode.h
+
+        # --- map ---
+        map/tile_type.h
+        map/tile.h
+        map/tile.cpp
+        map/game_map.h
+        map/game_map.cpp
+
+        # --- units ---
+        entities/units/unit_type.h
+        entities/units/unit.h
+        entities/units/unit.cpp
+        entities/units/unit_repository.h
+        entities/units/unit_repository.cpp
+        entities/units/warrior.h
+        entities/units/warrior.cpp
+        entities/units/archer.h
+        entities/units/archer.cpp
+        entities/units/cavalry.h
+        entities/units/cavalry.cpp
+
+        # --- buildings ---
+        entities/buildings/stronghold.h
+        entities/buildings/stronghold.cpp
+        entities/buildings/barracks.h
+        entities/buildings/barracks.cpp
+        entities/buildings/stables.h
+        entities/buildings/stables.cpp
 )
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# aby fungovaly include typu <action.h> / <unit.h> i v qmltyperegistrations.cpp
+target_include_directories(appStrategyGame PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/game
+    ${CMAKE_CURRENT_SOURCE_DIR}/map
+    ${CMAKE_CURRENT_SOURCE_DIR}/entities
+    ${CMAKE_CURRENT_SOURCE_DIR}/entities/units
+    ${CMAKE_CURRENT_SOURCE_DIR}/entities/buildings
+)
+
 set_target_properties(appStrategyGame PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appStrategyGame
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
@@ -68,10 +86,8 @@ set_target_properties(appStrategyGame PROPERTIES
 )
 
 target_link_libraries(appStrategyGame
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Quick Qt6::Core
 )
-target_link_libraries(appStrategyGame PRIVATE Qt6::Core)
-target_link_libraries(appStrategyGame PRIVATE Qt6::Core)
 
 include(GNUInstallDirs)
 install(TARGETS appStrategyGame
