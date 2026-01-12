@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import StrategyGame 1.0
 import "../style" as Style
 
 Item {
@@ -39,6 +38,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: theme.mapBackground
+        opacity: 0.9
     }
 
     Connections {
@@ -93,12 +93,18 @@ Item {
         // The Highlights
         Repeater {
             id: highlights
-            // Show highlights only if combat unit has move selected or building is in build mode.
+            // Show highlights only if:
+            //  - combat unit has move selected, OR
+            //  - building is in build mode, OR
+            //  - building is in train mode
             model: mapContainer.selectedUnit
-                   && ((controller.action.mode === ActionMode.Move
+                   && (
+                       (controller.action.mode === ActionMode.Move
                         && !mapContainer.selectedUnit.isBuilding)
-                       || (controller.action.mode === ActionMode.Build
-                           && mapContainer.selectedUnit.isBuilding)) ? controller.action.reachableTiles : []
+                       || ((controller.action.mode === ActionMode.Build
+                            || controller.action.mode === ActionMode.Train)
+                           && mapContainer.selectedUnit.isBuilding)
+                   ) ? controller.action.reachableTiles : []
 
             delegate: Item {
                 width: mapContainer.tileSize
@@ -117,21 +123,40 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: controller.action.mode
-                                 === ActionMode.Build ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    cursorShape: (controller.action.mode === ActionMode.Build
+                                  || controller.action.mode === ActionMode.Train)
+                                 ? Qt.PointingHandCursor
+                                 : Qt.ArrowCursor
 
                     onClicked: {
+                        // BUILD (Stronghold -> choose build tile)
                         if (controller.action.mode === ActionMode.Build) {
-                            controller.isPlayer1Turn ? controller.unitRepository.addPlayer1Unit(
-                                                           controller.action.chosenBuildType,
-                                                           Qt.point(
-                                                               modelData.x,
-                                                               modelData.y)) : controller.unitRepository.addPlayer2Unit(
-                                                           controller.action.chosenBuildType,
-                                                           Qt.point(
-                                                               modelData.x,
-                                                               modelData.y))
+                            if (controller.isPlayer1Turn) {
+                                controller.unitRepository.addPlayer1Unit(
+                                            controller.action.chosenBuildType,
+                                            Qt.point(modelData.x, modelData.y))
+                            } else {
+                                controller.unitRepository.addPlayer2Unit(
+                                            controller.action.chosenBuildType,
+                                            Qt.point(modelData.x, modelData.y))
+                            }
                             controller.action.mode = ActionMode.Move
+                            return
+                        }
+
+                        // TRAIN (Barracks/Stables -> choose spawn tile 1 around building)
+                        if (controller.action.mode === ActionMode.Train) {
+                            if (controller.isPlayer1Turn) {
+                                controller.unitRepository.addPlayer1Unit(
+                                            controller.action.chosenTrainType,
+                                            Qt.point(modelData.x, modelData.y))
+                            } else {
+                                controller.unitRepository.addPlayer2Unit(
+                                            controller.action.chosenTrainType,
+                                            Qt.point(modelData.x, modelData.y))
+                            }
+                            controller.action.mode = ActionMode.Move
+                            return
                         }
                     }
                 }

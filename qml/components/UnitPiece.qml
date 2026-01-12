@@ -9,7 +9,7 @@ Rectangle {
 
     // Configuration
     property bool isPlayer1Unit: true
-    property string unitColor: "red" // můžeš nechat, ale níž to přebarvím přes theme
+    property string unitColor: "red"
     property int tileSize: 35
     property var mapGridObj
 
@@ -17,28 +17,47 @@ Rectangle {
 
     signal attackSuccess
 
-    Style.Theme {
-        id: theme
-    }
+    Style.Theme { id: theme }
 
     width: tileSize
     height: tileSize
     radius: 7
 
-    // barva jednotky primárně z Theme (pokud chceš, unitColor pořád funguje jako fallback)
     color: (isPlayer1Unit ? theme.unitP1 : theme.unitP2) || unitColor
 
     border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
-    border.color: (unitModel
-                   && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
+    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
     z: 20
 
     // Internal state
     property point originalPos: Qt.point(0, 0)
-    readonly property bool isOwnerTurn: (isPlayer1Unit
-                                         && controller.isPlayer1Turn)
-                                        || (!isPlayer1Unit
-                                            && !controller.isPlayer1Turn)
+    readonly property bool isOwnerTurn: (isPlayer1Unit && controller.isPlayer1Turn)
+                                        || (!isPlayer1Unit && !controller.isPlayer1Turn)
+
+    // ✅ ikonka podle typu jednotky/budovy (Stáje vs Jezdec odděleno)
+    function iconForType(t) {
+        switch (t) {
+        case UnitType.Stronghold: return "🏰"
+        case UnitType.Barracks:   return "🏯"
+        case UnitType.Stables:    return "🏇"   // STÁJE (odlišit od jezdce)
+        case UnitType.Warrior:    return "⚔️"
+        case UnitType.Archer:     return "🏹"
+        case UnitType.Cavalry:    return "🐴"   // JEZDEC (odlišná ikonka)
+        default:                  return "❓"
+        }
+    }
+
+    // --- ICON OVERLAY ---
+    Text {
+        id: unitIcon
+        anchors.centerIn: parent
+        text: unitModel ? iconForType(unitModel.unitType) : ""
+        font.pixelSize: Math.floor(tileSize * 0.62)
+        scale: unitModel && unitModel.isBuilding ? 0.92 : 1.0
+        z: 24
+        style: Text.Outline
+        styleColor: "#000000aa"
+    }
 
     // Move Animation
     Rectangle {
@@ -53,33 +72,13 @@ Rectangle {
     SequentialAnimation {
         id: moveAnim
         ParallelAnimation {
-            PropertyAnimation {
-                target: moveGlow
-                property: "opacity"
-                to: 0.60
-                duration: 90
-            }
+            PropertyAnimation { target: moveGlow; property: "opacity"; to: 0.60; duration: 90 }
             SequentialAnimation {
-                PropertyAnimation {
-                    target: root
-                    property: "scale"
-                    to: 1.18
-                    duration: 90
-                }
-                PropertyAnimation {
-                    target: root
-                    property: "scale"
-                    to: 1.00
-                    duration: 140
-                }
+                PropertyAnimation { target: root; property: "scale"; to: 1.18; duration: 90 }
+                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 140 }
             }
         }
-        PropertyAnimation {
-            target: moveGlow
-            property: "opacity"
-            to: 0.00
-            duration: 220
-        }
+        PropertyAnimation { target: moveGlow; property: "opacity"; to: 0.00; duration: 220 }
     }
 
     // Hit Animation
@@ -95,46 +94,17 @@ Rectangle {
     SequentialAnimation {
         id: hitAnim
         ParallelAnimation {
-            PropertyAnimation {
-                target: hitFlash
-                property: "opacity"
-                to: 0.75
-                duration: 70
-            }
+            PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.75; duration: 70 }
             SequentialAnimation {
-                PropertyAnimation {
-                    target: root
-                    property: "scale"
-                    to: 0.92
-                    duration: 60
-                }
-                PropertyAnimation {
-                    target: root
-                    property: "scale"
-                    to: 1.08
-                    duration: 70
-                }
-                PropertyAnimation {
-                    target: root
-                    property: "scale"
-                    to: 1.00
-                    duration: 90
-                }
+                PropertyAnimation { target: root; property: "scale"; to: 0.92; duration: 60 }
+                PropertyAnimation { target: root; property: "scale"; to: 1.08; duration: 70 }
+                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 90 }
             }
         }
-        PropertyAnimation {
-            target: hitFlash
-            property: "opacity"
-            to: 0.00
-            duration: 220
-        }
+        PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.00; duration: 220 }
     }
 
-    NumberAnimation on x {
-        id: moveAnimX
-        duration: 200
-        running: false
-    }
+    NumberAnimation on x { id: moveAnimX; duration: 200; running: false }
     NumberAnimation on y {
         id: moveAnimY
         duration: 200
@@ -142,24 +112,19 @@ Rectangle {
         onStopped: root.bindToModel()
     }
 
-    // position binding
     function bindToModel() {
-        if (!mapGridObj)
-            return
+        if (!mapGridObj) return
 
         root.x = Qt.binding(function () {
-            return (unitModel
-                    && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
+            return (unitModel && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
         })
         root.y = Qt.binding(function () {
-            return (unitModel
-                    && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
+            return (unitModel && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
         })
     }
 
     Component.onCompleted: bindToModel()
 
-    // interaction
     MouseArea {
         id: ma
         anchors.fill: parent
@@ -167,7 +132,6 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         enabled: !gameOver
 
-        // Drag enabled only if it's owner's turn, move mode, unit selected, and has movement points
         drag.target: (unitModel && isOwnerTurn
                       && controller.action.mode === ActionMode.Move
                       && unitModel.unitSelected && !unitModel.isBuilding
@@ -187,7 +151,6 @@ Rectangle {
             }
             if (drag.active) {
                 root.originalPos = Qt.point(root.x, root.y)
-                // odvázání bindingu řešíš tím, že při drag aktivním nastavíš přímo x/y
                 root.x = root.x
                 root.y = root.y
             }
@@ -215,7 +178,6 @@ Rectangle {
                     root.x = mapGridObj.x + col * tileSize
                     root.y = mapGridObj.y + row * tileSize
                     root.bindToModel()
-                    // moveAnim.restart() // vizuální efekt při úspěšném move
                 } else {
                     root.x = root.originalPos.x
                     root.y = root.originalPos.y
@@ -226,7 +188,6 @@ Rectangle {
         }
     }
 
-    // jemný hover/pressed outline přes Theme (jen UX detail)
     Rectangle {
         anchors.fill: parent
         radius: parent.radius
@@ -237,3 +198,4 @@ Rectangle {
         visible: !gameOver
     }
 }
+

@@ -18,7 +18,8 @@ QtObject {
     // Map
     readonly property color mapBackground: "#222222"
     readonly property color mapTileBorder: "#111111"
-    readonly property color reachableTile: "#aa00ff00"
+
+    readonly property color reachableTile: "#7f8fa3"
 
     // Panels / cards
     readonly property color panelBg: "#333333"
@@ -60,10 +61,11 @@ QtObject {
 
     // UnitPiece / interactions
     readonly property color unitBorder: "#ffffff"
-    readonly property color unitSelectedBorder: "#55ff55" // místo "lime"
+    readonly property color unitSelectedBorder: "#55ff55"
     readonly property color unitHoverBorder: "#ffffff66"
     readonly property color unitPressedBorder: "#ffffffaa"
 
     readonly property color unitMoveGlow: "#55ff55"
     readonly property color unitHitFlash: "#ff2222"
 }
+

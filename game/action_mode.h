@@ -9,7 +9,8 @@ Q_NAMESPACE
 enum Mode {
     Move,
     Attack,
-    Build
+    Build,
+    Train
 };
 Q_ENUM_NS(Mode)
 }
