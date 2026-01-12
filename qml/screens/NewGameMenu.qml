@@ -4,46 +4,115 @@ import "../style" as Style
 import "../components"
 
 Item {
-    id: newGameRoot
+    id: menuRoot
 
     width: parent ? parent.width : 1280
     height: parent ? parent.height : 720
 
-    Style.Theme {
-        id: theme
-    }
+    Style.Theme { id: theme }
 
+    signal startRequested(int playerCount, int startGold)
     signal backRequested
-    signal humanVsHumanRequested
-    signal humanVsBotRequested
+
+    // 0 = výběr hráčů, 1 = výběr rozpočtu
+    property int step: 0
+    property int selectedPlayerCount: 2
 
     Column {
-        anchors.centerIn: parent
-        spacing: 16
+        id: column
+        spacing: 14
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+
+        // ===== HLAVIČKA (STEJNÁ JAKO MAIN MENU) =====
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Strategy Game"
+            color: theme.textPrimary
+            font.pixelSize: 40
+            font.bold: true
+        }
 
         Text {
-            text: "Nová hra"
-            font.pixelSize: 32
-            color: theme.textPrimary
             anchors.horizontalCenter: parent.horizontalCenter
+            text: step === 0
+                  ? "Kolik vás bude hrát"
+                  : "Vyberte rozpočet na hru"
+            color: theme.textSecondary
+            font.pixelSize: 16
         }
 
-        // Člověk proti člověku
-        MenuButton {
-            text: "Člověk proti člověku"
-            onClicked: newGameRoot.humanVsHumanRequested()
+        Rectangle {
+            width: 1
+            height: 18
+            color: "transparent"
         }
 
-        // Člověk vs Bot
-        MenuButton {
-            text: "Člověk vs Bot"
-            onClicked: newGameRoot.humanVsBotRequested()
+        // =================================================
+        // STEP 0 – VÝBĚR POČTU HRÁČŮ
+        // =================================================
+        Column {
+            visible: step === 0
+            spacing: 14
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            MenuButton {
+                text: "1 vs 1  (2 hráči)"
+                onClicked: {
+                    selectedPlayerCount = 2
+                    step = 1
+                }
+            }
+
+            MenuButton {
+                text: "1 vs 1 vs 1  (3 hráči)"
+                onClicked: {
+                    selectedPlayerCount = 3
+                    step = 1
+                }
+            }
+
+            MenuButton {
+                text: "1 vs 1 vs 1 vs 1  (4 hráči)"
+                onClicked: {
+                    selectedPlayerCount = 4
+                    step = 1
+                }
+            }
+
+            MenuButton {
+                text: "Zpět"
+                onClicked: menuRoot.backRequested()
+            }
         }
 
-        // Zpět
-        MenuButton {
-            text: "Zpět"
-            onClicked: newGameRoot.backRequested()
+        // =================================================
+        // STEP 1 – VÝBĚR ROZPOČTU
+        // =================================================
+        Column {
+            visible: step === 1
+            spacing: 14
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            MenuButton {
+                text: "300 gold  (rychlá hra)"
+                onClicked: menuRoot.startRequested(selectedPlayerCount, 300)
+            }
+
+            MenuButton {
+                text: "500 gold  (vyvážená hra)"
+                onClicked: menuRoot.startRequested(selectedPlayerCount, 500)
+            }
+
+            MenuButton {
+                text: "1000 gold  (dlouhá hra)"
+                onClicked: menuRoot.startRequested(selectedPlayerCount, 1000)
+            }
+
+            MenuButton {
+                text: "Zpět"
+                onClicked: step = 0
+            }
         }
     }
 }

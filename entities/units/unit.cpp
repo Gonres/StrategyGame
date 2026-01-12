@@ -20,6 +20,7 @@ Unit::Unit(UnitType::Type type, int maxHealth, int attackDamage,
     m_position(position),
     m_unitSelected(false),
     m_isBuilding(false),
+    m_ownerId(-1),
     QObject(parent) {}
 
 Unit::Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent)
@@ -34,6 +35,7 @@ Unit::Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent)
     m_position(position),
     m_unitSelected(false),
     m_isBuilding(true),
+    m_ownerId(-1),
     QObject(parent) {}
 
 Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
@@ -69,6 +71,20 @@ bool Unit::hasAttacked() const
 bool Unit::isBuilding() const
 {
     return m_isBuilding;
+}
+
+int Unit::ownerId() const
+{
+    return m_ownerId;
+}
+
+void Unit::setOwnerId(int ownerId)
+{
+    if (m_ownerId == ownerId) {
+        return;
+    }
+    m_ownerId = ownerId;
+    emit ownerIdChanged();
 }
 
 void Unit::resetMovement()
@@ -186,13 +202,13 @@ QString Unit::unitTypeToString() const
     case UnitType::Cavalry:
         return "Jezdec";
     case UnitType::Stronghold:
-        return "Pevnost";
+        return "Stronghold";
     case UnitType::Barracks:
         return "Kasárny";
     case UnitType::Stables:
         return "Stáje";
     default:
-        return "Unknown";
+        return "Neznámé";
     }
 }
 
@@ -201,14 +217,5 @@ void Unit::attack(Unit *target)
     if (!target) {
         return;
     }
-
-    // Default damage calculation
-    int newHealth = target->getHealth() - m_attackDamage;
-    if (newHealth < 0) {
-        newHealth = 0;
-    }
-    target->setHealth(newHealth);
-    qDebug() << "Unit " << unitTypeToString() << " attacked "
-             << target->unitTypeToString() << " dealing " << m_attackDamage
-             << " damage. Remaining Health: " << newHealth;
+    target->setHealth(target->getHealth() - m_attackDamage);
 }

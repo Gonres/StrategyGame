@@ -58,6 +58,8 @@ QtObject {
     // Units (base)
     readonly property color unitP1: "#ff3b3b"
     readonly property color unitP2: "#3b7bff"
+    readonly property color unitP3: "#f6c445"   // yellow
+    readonly property color unitP4: "#b34dff"   // purplef
 
     // UnitPiece / interactions
     readonly property color unitBorder: "#ffffff"

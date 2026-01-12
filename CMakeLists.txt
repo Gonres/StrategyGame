@@ -66,6 +66,9 @@ qt_add_qml_module(appStrategyGame
         entities/buildings/barracks.cpp
         entities/buildings/stables.h
         entities/buildings/stables.cpp
+        SOURCES game/game_config.h
+        SOURCES game/player.h game/player.cpp
+        QML_FILES qml/screens/NewGameMenu.qml
 )
 
 # aby fungovaly include typu <action.h> / <unit.h> i v qmltyperegistrations.cpp

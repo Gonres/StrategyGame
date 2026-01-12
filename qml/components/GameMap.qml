@@ -13,7 +13,7 @@ Item {
     property int minTileSize: 20
 
     // symetrické boční panely
-    property int sidePanelWidth: 300
+    property int sidePanelWidth: 320
     property int messageBarHeight: 48
 
     property var selectedUnit:
@@ -25,7 +25,18 @@ Item {
     property string winnerText: controller.winnerText
     property string lastMoveMessage: ""
 
+    function colorForPlayer(pid) {
+        switch (pid) {
+        case 0: return theme.unitP1
+        case 1: return theme.unitP2
+        case 2: return theme.unitP3
+        case 3: return theme.unitP4
+        default: return theme.unitP1
+        }
+    }
+
     Timer {
+        id: msgTimer
         interval: 3000
         onTriggered: lastMoveMessage = ""
     }
@@ -34,7 +45,13 @@ Item {
         target: controller.action
         function onActionMessage(msg) {
             lastMoveMessage = msg
+            msgTimer.restart()
         }
+    }
+
+    Connections {
+        target: controller.unitRepository
+        function onUnitsChanged() { controller.checkVictory() }
     }
 
     // =====================================================
@@ -47,16 +64,14 @@ Item {
     }
 
     // =====================================================
-    // BAREVNÝ RÁM PODLE HRÁČE
+    // BAREVNÝ RÁM PODLE HRÁČE (aktuální tah)
     // =====================================================
     Rectangle {
         anchors.fill: parent
         radius: 16
         color: "transparent"
         border.width: 4
-        border.color: controller.isPlayer1Turn
-                      ? theme.unitP1
-                      : theme.unitP2
+        border.color: colorForPlayer(controller.currentPlayerId)
         z: 1
     }
 
@@ -87,7 +102,14 @@ Item {
 
                 MenuButton {
                     text: "Ukončit hru"
-                    onClicked: backRequested()
+                    enabled: !gameOver
+                    onClicked: {
+                        if (controller) {
+                            controller.action.clearSelection()
+                            controller.action.mode = ActionMode.Move
+                        }
+                        backRequested()
+                    }
                 }
 
                 Rectangle {
@@ -97,11 +119,22 @@ Item {
                 }
 
                 Text {
-                    text: controller.isPlayer1Turn
-                          ? "Hraje: Hráč 1"
-                          : "Hraje: Hráč 2"
+                    text: "Hraje: Hráč " + (controller.currentPlayerId + 1) + " / " + controller.playerCount
                     color: theme.textMuted
                     font.pixelSize: 14
+                }
+
+                Text {
+                    text: "💰 Gold: " + controller.currentGold
+                    color: theme.textPrimary
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+
+                Text {
+                    text: "Příjem za tah: +50"
+                    color: theme.textMuted
+                    font.pixelSize: 12
                 }
 
                 Item { Layout.fillHeight: true }
@@ -177,6 +210,7 @@ Item {
                     width: controller.map.columns * centerArea.tileSize
                     height: controller.map.rows * centerArea.tileSize
 
+                    // ---------- Tiles ----------
                     Grid {
                         id: mapGrid
                         anchors.fill: parent
@@ -195,9 +229,21 @@ Item {
                         }
                     }
 
+                    // ✅ Klik mimo reachable / mimo jednotky -> zavři reachable + selection
+                    MouseArea {
+                        anchors.fill: parent
+                        z: 5
+                        enabled: !gameOver && (controller.action.selectedUnits.length > 0
+                                 || controller.action.reachableTiles.length > 0)
+                        onClicked: {
+                            controller.action.clearSelection()
+                            controller.action.mode = ActionMode.Move
+                        }
+                    }
+
                     // ---------- Reachable highlights ----------
                     Repeater {
-                        model: selectedUnit &&
+                        model: !gameOver && selectedUnit &&
                                (
                                    (controller.action.mode === ActionMode.Move && !selectedUnit.isBuilding) ||
                                    (controller.action.mode === ActionMode.Build && selectedUnit.isBuilding) ||
@@ -211,6 +257,7 @@ Item {
                             height: centerArea.tileSize
                             x: modelData.x * centerArea.tileSize
                             y: modelData.y * centerArea.tileSize
+                            z: 10
 
                             Rectangle {
                                 anchors.fill: parent
@@ -222,63 +269,67 @@ Item {
 
                             MouseArea {
                                 anchors.fill: parent
+                                enabled: !gameOver
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (controller.action.mode === ActionMode.Build) {
-                                        controller.isPlayer1Turn
-                                            ? controller.unitRepository.addPlayer1Unit(
-                                                  controller.action.chosenBuildType,
-                                                  Qt.point(modelData.x, modelData.y))
-                                            : controller.unitRepository.addPlayer2Unit(
-                                                  controller.action.chosenBuildType,
-                                                  Qt.point(modelData.x, modelData.y))
-                                        controller.action.mode = ActionMode.Move
+                                        let ok = controller.tryBuildAt(modelData.x, modelData.y)
+                                        if (ok) {
+                                            controller.action.clearSelection()
+                                            controller.action.mode = ActionMode.Move
+                                        }
                                     } else if (controller.action.mode === ActionMode.Train) {
-                                        controller.isPlayer1Turn
-                                            ? controller.unitRepository.addPlayer1Unit(
-                                                  controller.action.chosenTrainType,
-                                                  Qt.point(modelData.x, modelData.y))
-                                            : controller.unitRepository.addPlayer2Unit(
-                                                  controller.action.chosenTrainType,
-                                                  Qt.point(modelData.x, modelData.y))
-                                        controller.action.mode = ActionMode.Move
+                                        let ok2 = controller.tryTrainAt(modelData.x, modelData.y)
+                                        if (ok2) {
+                                            controller.action.clearSelection()
+                                            controller.action.mode = ActionMode.Move
+                                        }
+                                    } else if (controller.action.mode === ActionMode.Move) {
+                                        controller.action.tryMoveSelectedTo(Qt.point(modelData.x, modelData.y))
                                     }
                                 }
                             }
                         }
                     }
 
-                    Repeater {
-                        model: controller.unitRepository.player1Units
-                        delegate: UnitPiece {
-                            unitModel: modelData
-                            isPlayer1Unit: true
-                            unitColor: theme.unitP1
-                            tileSize: centerArea.tileSize
-                            mapGridObj: mapGrid
-                            gameOver: gameOver
-                        }
+                    // Attack flash
+                    Rectangle {
+                        id: mapHitFlash
+                        anchors.fill: parent
+                        z: 60
+                        color: theme.flashAttack
+                        opacity: 0
+                        visible: opacity > 0
                     }
 
+                    // ---------- All units (players 1..4) ----------
                     Repeater {
-                        model: controller.unitRepository.player2Units
+                        model: controller.unitRepository.allUnits
                         delegate: UnitPiece {
                             unitModel: modelData
-                            isPlayer1Unit: false
-                            unitColor: theme.unitP2
                             tileSize: centerArea.tileSize
                             mapGridObj: mapGrid
                             gameOver: gameOver
+
+                            onAttackSuccess: {
+                                mapHitFlashAnim.restart()
+                                controller.checkVictory()
+                                controller.action.mode = ActionMode.Move
+                            }
                         }
                     }
                 }
 
+                // =============================================
+                // KONEC KOLA
+                // =============================================
                 MenuButton {
                     id: endTurnButton
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Konec kola"
                     enabled: !gameOver
                     onClicked: {
+                        controller.action.clearSelection()
                         controller.action.mode = ActionMode.Move
                         controller.endTurn()
                     }
@@ -313,6 +364,107 @@ Item {
                 UnitList {
                     visible: controller.action.selectedUnits.length > 0
                     anchors.fill: parent
+                }
+            }
+        }
+    }
+
+    // Flash anim
+    SequentialAnimation {
+        id: mapHitFlashAnim
+        PropertyAnimation { target: mapHitFlash; property: "opacity"; to: 0.45; duration: 70 }
+        PropertyAnimation { target: mapHitFlash; property: "opacity"; to: 0.00; duration: 220 }
+    }
+
+    // =====================================================
+    // GAME OVER "VÝHERNÍ STRÁNKA" (overlay)
+    // =====================================================
+    Rectangle {
+        id: victoryOverlay
+        anchors.fill: parent
+        z: 200
+        visible: gameOver
+        color: "#000000"
+        opacity: 0.65
+
+        Behavior on opacity { NumberAnimation { duration: 180 } }
+
+        // blokace kliků
+        MouseArea {
+            anchors.fill: parent
+            enabled: victoryOverlay.visible
+        }
+
+        // karta
+        Rectangle {
+            id: victoryCard
+            width: Math.min(parent.width * 0.70, 720)
+            height: Math.min(parent.height * 0.45, 380)
+            anchors.centerIn: parent
+            radius: 18
+            color: theme.panelBg
+            border.width: 1
+            border.color: theme.panelBorder
+
+            // jednoduchý "pop" efekt
+            scale: victoryOverlay.visible ? 1.0 : 0.92
+            opacity: victoryOverlay.visible ? 1.0 : 0.0
+            Behavior on scale { NumberAnimation { duration: 180 } }
+            Behavior on opacity { NumberAnimation { duration: 180 } }
+
+            Column {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 12
+
+                Text {
+                    text: "Konec hry"
+                    color: theme.textPrimary
+                    font.pixelSize: 34
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                }
+
+                Rectangle {
+                    height: 1
+                    width: parent.width
+                    color: theme.panelBorder
+                }
+
+                Text {
+                    text: winnerText
+                    color: theme.textPrimary
+                    font.pixelSize: 26
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                }
+
+                Text {
+                    text: "🎉 Gratuluji! Můžeš začít novou hru nebo se vrátit do menu."
+                    color: theme.textMuted
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                }
+
+                Item { height: 6; width: 1 }
+
+                Row {
+                    spacing: 12
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    MenuButton {
+                        text: "Zpět do menu"
+                        onClicked: {
+                            controller.action.clearSelection()
+                            controller.action.mode = ActionMode.Move
+                            backRequested()
+                        }
+                    }
                 }
             }
         }

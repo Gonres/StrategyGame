@@ -16,6 +16,7 @@ Window {
         id: theme
     }
 
+
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
@@ -89,11 +90,11 @@ Window {
         id: newGameMenuComponent
         Screens.NewGameMenu {
             onBackRequested: stack.pop()
-            onHumanVsHumanRequested: {
+            onStartRequested: function(playerCount, startGold) {
+                controller.setGameConfig(playerCount, startGold)
                 controller.startGame()
                 stack.push(gameScreenComponent)
             }
-            onHumanVsBotRequested: console.log("Start: Human vs Bot")
         }
     }
 
@@ -108,9 +109,10 @@ Window {
         id: gameScreenComponent
         Comp.GameMap {
             onBackRequested: {
-                stack.pop()
-                controller.stopGame()
+                controller.resetToDefaults()
+                stack.pop(stack.get(0))
             }
         }
     }
+
 }

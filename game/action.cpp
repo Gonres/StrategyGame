@@ -1,58 +1,27 @@
 #include "game/action.h"
 
-Action::Action(UnitRepository *unitRepository, GameMap *map, QObject *parent)
-    : QObject{parent},
-      m_unitRepository(unitRepository),
-      m_map(map),
-      m_mode(ActionMode::Move),
-      m_chosenBuildType(UnitType::Barracks),
-      m_chosenTrainType(UnitType::Warrior)
-{}
+#include <QtMath>
 
-QList<Unit *> Action::getSelectedUnits() const
+static bool isPointValid(GameMap *map, const QPoint &p)
+{
+    if (!map) return false;
+    if (p.x() < 0 || p.y() < 0) return false;
+    return map->isValid(p.x(), p.y());
+}
+
+Action::Action(UnitRepository *repo, GameMap *map, QObject *parent)
+    : QObject(parent),
+    m_unitRepository(repo),
+    m_map(map),
+    m_mode(ActionMode::Move),
+    m_chosenBuildType(UnitType::Barracks),
+    m_chosenTrainType(UnitType::Warrior)
+{
+}
+
+QList<Unit*> Action::selectedUnits() const
 {
     return m_selectedUnits;
-}
-
-void Action::clearSelection()
-{
-    if (!m_selectedUnits.isEmpty()) {
-        for (Unit *unit : m_selectedUnits) {
-            unit->setUnitSelected(false);
-        }
-        m_selectedUnits.clear();
-        emit selectionChanged();
-        emit reachableTilesChanged();
-    }
-}
-
-void Action::addToSelection(Unit *unit)
-{
-    if (unit && !m_selectedUnits.contains(unit)) {
-        m_selectedUnits.append(unit);
-        unit->setUnitSelected(true);
-        emit selectionChanged();
-        emit reachableTilesChanged();
-    }
-}
-
-void Action::resetTurnForCurrentPlayer(bool isPlayer1Turn)
-{
-    QList<Unit *> units = isPlayer1Turn ? m_unitRepository->player1Units()
-                                        : m_unitRepository->player2Units();
-    for (Unit *unit : units) {
-        if (!unit || unit->isBuilding()) continue;
-        unit->resetMovement();
-        unit->resetAttack();
-    }
-}
-
-void Action::setMode(ActionMode::Mode mode)
-{
-    if (m_mode == mode) return;
-    m_mode = mode;
-    emit modeChanged(mode);
-    emit reachableTilesChanged();
 }
 
 ActionMode::Mode Action::mode() const
@@ -60,132 +29,198 @@ ActionMode::Mode Action::mode() const
     return m_mode;
 }
 
-UnitType::Type Action::chosenBuildType() const
+void Action::setMode(ActionMode::Mode m)
 {
-    return m_chosenBuildType;
+    if (m_mode == m) return;
+    m_mode = m;
+    emit modeChanged();
+    recalcReachable();
 }
 
-UnitType::Type Action::chosenTrainType() const
+QList<QPoint> Action::reachableTiles() const
 {
-    return m_chosenTrainType;
+    return m_reachableTiles;
 }
 
-void Action::setchosenBuildType(UnitType::Type type)
+// ===== QML helpers =====
+
+void Action::clearSelection()
 {
-    if (m_chosenBuildType == type) return;
-    m_chosenBuildType = type;
-    emit chosenBuildTypeChanged();
+    for (Unit *u : m_selectedUnits) {
+        if (u) u->setUnitSelected(false);
+    }
+    m_selectedUnits.clear();
+    emit selectedUnitsChanged();
+
+    m_reachableTiles.clear();
     emit reachableTilesChanged();
 }
 
-void Action::setChosenTrainType(UnitType::Type type)
+void Action::refreshReachable()
 {
-    if (m_chosenTrainType == type) return;
-    m_chosenTrainType = type;
-    emit chosenTrainTypeChanged();
-    emit reachableTilesChanged();
+    recalcReachable();
 }
 
-bool Action::tryMoveSelectedTo(int col, int row)
+// ===== Gameplay =====
+
+void Action::trySelectUnit(Unit *unit)
+{
+    if (!unit) return;
+
+    clearSelection();
+    unit->setUnitSelected(true);
+    m_selectedUnits.append(unit);
+
+    emit selectedUnitsChanged();
+    recalcReachable();
+}
+
+bool Action::tryMoveSelectedTo(QPoint dest)
 {
     if (m_selectedUnits.isEmpty()) return false;
-    Unit *unit = m_selectedUnits.first();
 
-    if (col < 0 || row < 0 || col >= m_map->getColumns() || row >= m_map->getRows()) return false;
+    Unit *u = m_selectedUnits.first();
+    if (!u || u->isBuilding()) return false;
 
-    Unit *obstacle = m_unitRepository->getUnitAt(QPoint(col, row));
-    if (obstacle && obstacle != unit) {
-        emit actionMessage("Nelze se tam dostat!");
-        return false;
-    }
+    if (!isPointValid(m_map, dest)) return false;
+    if (!m_map->isPassable(dest.x(), dest.y())) return false;
+    if (m_unitRepository->getUnitAt(dest)) return false;
 
-    const int dist = qAbs(unit->getPosition().x() - col) + qAbs(unit->getPosition().y() - row);
-    if (dist > unit->getMovementPoints()) {
-        emit actionMessage("Nedostatek bodů pohybu!");
-        return false;
-    }
+    const int dx = qAbs(dest.x() - u->getPosition().x());
+    const int dy = qAbs(dest.y() - u->getPosition().y());
+    const int cost = dx + dy;
 
-    const int index = m_map->getIndex(col, row);
-    Tile *tile = m_map->getTiles().at(index);
-    if (tile->getType() == TileType::Water) {
-        emit actionMessage("Nemůžeš chodit na vodě!");
-        return false;
-    }
+    if (!u->spendMovement(cost)) return false;
 
-    unit->setPosition(QPoint(col, row));
-    unit->spendMovement(dist);
-    emit actionMessage("");
+    u->setPosition(dest);
+    recalcReachable();
+    emit actionMessage("Jednotka se pohnula.");
     return true;
 }
 
 bool Action::tryAttack(Unit *target)
 {
     if (m_selectedUnits.isEmpty() || !target) return false;
+
     Unit *attacker = m_selectedUnits.first();
-    if (attacker->isBuilding()) return false;
+    if (!attacker || attacker->isBuilding()) return false;
+    if (attacker->hasAttacked()) return false;
+    if (attacker->ownerId() == target->ownerId()) return false;
 
-    const QPoint p1 = attacker->getPosition();
-    const QPoint p2 = target->getPosition();
-    const int dist = qAbs(p1.x() - p2.x()) + qAbs(p1.y() - p2.y());
+    const int dx = qAbs(attacker->getPosition().x() - target->getPosition().x());
+    const int dy = qAbs(attacker->getPosition().y() - target->getPosition().y());
+    const int dist = dx + dy;
 
-    if (dist > attacker->getAttackRange()) {
-        emit actionMessage("Cíl je daleko!");
-        return false;
-    }
-    if (attacker->hasAttacked()) {
-        emit actionMessage("Jednotka už zaútočila!");
-        return false;
-    }
+    if (dist > attacker->getAttackRange()) return false;
 
-    const int dmg = attacker->getAttackDamage();
-    target->setHealth(target->getHealth() - dmg);
+    attacker->attack(target);
     attacker->markAttacked();
 
-    if (target->getHealth() <= 0) {
+    // Pokud cíl umřel, musíme ho odstranit z repository,
+    // jinak tam zůstane jako "duch" a vítězství se nikdy nevyhodnotí.
+    const int targetHealth = target->property("health").toInt();
+    if (targetHealth <= 0) {
         m_unitRepository->removeUnit(target);
-        emit actionMessage("Cíl zničen! - " + QString::number(dmg) + " HP");
-    } else {
-        emit actionMessage("Hit! - " + QString::number(dmg) + " HP");
+        emit victoryStateMayHaveChanged();
     }
+
+    emit actionMessage("Útok!");
+    emit reachableTilesChanged();
     return true;
 }
 
-QVariantList Action::reachableTiles()
+void Action::resetTurnForCurrentPlayer(int playerId)
 {
-    QVariantList tiles;
-    if (m_selectedUnits.isEmpty()) return tiles;
+    const QList<Unit*> units = m_unitRepository->unitsForPlayer(playerId);
+    for (Unit *u : units) {
+        if (!u || u->isBuilding()) continue;
+        u->resetMovement();
+        u->resetAttack();
+    }
+}
 
-    Unit *unit = m_selectedUnits.first();
-    QPoint start = unit->getPosition();
+// ===== Reachable =====
 
-    // Move: používá movement points
-    // Build/Train: vždy jen 1 políčko kolem budovy
-    int range = unit->getMovementPoints();
-    if (m_mode == ActionMode::Build || m_mode == ActionMode::Train) {
-        range = 1;
+void Action::recalcReachable()
+{
+    m_reachableTiles.clear();
+
+    if (m_selectedUnits.isEmpty()) {
+        emit reachableTilesChanged();
+        return;
     }
 
-    for (int x = start.x() - range; x <= start.x() + range; ++x) {
-        for (int y = start.y() - range; y <= start.y() + range; ++y) {
+    Unit *u = m_selectedUnits.first();
+    if (!u) {
+        emit reachableTilesChanged();
+        return;
+    }
 
-            if (x < 0 || y < 0 || x >= m_map->getColumns() || y >= m_map->getRows()) continue;
+    if (m_mode == ActionMode::Move && !u->isBuilding()) {
+        m_reachableTiles = computeReachableForMove(u);
+    } else if ((m_mode == ActionMode::Build || m_mode == ActionMode::Train) && u->isBuilding()) {
+        m_reachableTiles = computeReachableForBuild(u);
+    }
 
-            const int dist = qAbs(x - start.x()) + qAbs(y - start.y());
-            if (dist == 0 || dist > range) continue;
+    emit reachableTilesChanged();
+}
 
-            const int index = m_map->getIndex(x, y);
-            Tile *tile = m_map->getTiles().at(index);
-            if (tile->getType() == TileType::Water) continue;
+QList<QPoint> Action::computeReachableForMove(Unit *u) const
+{
+    QList<QPoint> out;
+    const QPoint pos = u->getPosition();
+    const int range = u->getMovementPoints();
 
-            // zvýrazňuj jen volná políčka
-            if (m_unitRepository->getUnitAt(QPoint(x, y))) continue;
+    for (int dx = -range; dx <= range; ++dx) {
+        for (int dy = -range; dy <= range; ++dy) {
+            if (qAbs(dx) + qAbs(dy) > range) continue;
 
-            QVariantMap t;
-            t["x"] = x;
-            t["y"] = y;
-            tiles.append(t);
+            QPoint p(pos.x() + dx, pos.y() + dy);
+            if (!isPointValid(m_map, p)) continue;
+            if (!m_map->isPassable(p.x(), p.y())) continue;
+            if (m_unitRepository->getUnitAt(p)) continue;
+
+            out.append(p);
         }
     }
+    return out;
+}
 
-    return tiles;
+QList<QPoint> Action::computeReachableForBuild(Unit *u) const
+{
+    QList<QPoint> out;
+    const QPoint pos = u->getPosition();
+
+    const QList<QPoint> dirs = {
+        QPoint(1,0), QPoint(-1,0), QPoint(0,1), QPoint(0,-1)
+};
+
+for (const QPoint &d : dirs) {
+    QPoint p(pos.x() + d.x(), pos.y() + d.y());
+    if (!isPointValid(m_map, p)) continue;
+    if (!m_map->isPassable(p.x(), p.y())) continue;
+    if (m_unitRepository->getUnitAt(p)) continue;
+
+    out.append(p);
+}
+return out;
+}
+
+UnitType::Type Action::chosenBuildType() const { return m_chosenBuildType; }
+UnitType::Type Action::chosenTrainType() const { return m_chosenTrainType; }
+
+void Action::setChosenBuildType(UnitType::Type t)
+{
+    if (m_chosenBuildType == t) return;
+    m_chosenBuildType = t;
+    emit chosenBuildTypeChanged();
+    recalcReachable();
+}
+
+void Action::setChosenTrainType(UnitType::Type t)
+{
+    if (m_chosenTrainType == t) return;
+    m_chosenTrainType = t;
+    emit chosenTrainTypeChanged();
+    recalcReachable();
 }

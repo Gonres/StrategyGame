@@ -22,6 +22,7 @@ class Unit : public QObject
     Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
     Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
     Q_PROPERTY(bool isBuilding READ isBuilding CONSTANT)
+    Q_PROPERTY(int ownerId READ ownerId WRITE setOwnerId NOTIFY ownerIdChanged)
 
 protected:
     // Normal movable unit
@@ -46,11 +47,13 @@ public:
     bool isUnitSelected() const;
     bool hasAttacked() const;
     bool isBuilding() const;
+    int ownerId() const;
     QString unitTypeToString() const;
 
     void setHealth(int newHealth);
     void setPosition(QPoint position);
     void setUnitSelected(bool selected);
+    void setOwnerId(int ownerId);
     void attack(Unit *target);
 
     Q_INVOKABLE void resetMovement();
@@ -64,6 +67,7 @@ signals:
     void unitSelectedChanged();
     void movementPointsChanged();
     void hasAttackedChanged();
+    void ownerIdChanged();
 
 private:
     UnitType::Type m_unitType;
@@ -77,6 +81,9 @@ private:
     QPoint m_position;
     bool m_unitSelected;
     bool m_isBuilding;
+
+    // Player ownership (0..3). Set by UnitRepository on spawn.
+    int m_ownerId;
 };
 
 #endif // UNIT_H

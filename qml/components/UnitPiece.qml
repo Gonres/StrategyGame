@@ -1,5 +1,4 @@
 import QtQuick
-import StrategyGame 1.0
 import "../style" as Style
 
 Rectangle {
@@ -8,11 +7,8 @@ Rectangle {
     property var unitModel
 
     // Configuration
-    property bool isPlayer1Unit: true
-    property string unitColor: "red"
     property int tileSize: 35
     property var mapGridObj
-
     property bool gameOver: false
 
     signal attackSuccess
@@ -22,30 +18,41 @@ Rectangle {
     width: tileSize
     height: tileSize
     radius: 7
-
-    color: (isPlayer1Unit ? theme.unitP1 : theme.unitP2) || unitColor
-
-    border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
-    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
     z: 20
 
-    // Internal state
-    property point originalPos: Qt.point(0, 0)
-    readonly property bool isOwnerTurn: (isPlayer1Unit && controller.isPlayer1Turn)
-                                        || (!isPlayer1Unit && !controller.isPlayer1Turn)
+    // ===== Helpers =====
+    readonly property bool isOwnerTurn: unitModel && (unitModel.ownerId === controller.currentPlayerId)
 
-    // ✅ ikonka podle typu jednotky/budovy (Stáje vs Jezdec odděleno)
+    function colorForOwner(ownerId) {
+        switch (ownerId) {
+        case 0: return theme.unitP1
+        case 1: return theme.unitP2
+        case 2: return theme.unitP3
+        case 3: return theme.unitP4
+        default: return theme.unitP1
+        }
+    }
+
+    // ✅ ikonka podle typu jednotky/budovy
     function iconForType(t) {
         switch (t) {
         case UnitType.Stronghold: return "🏰"
         case UnitType.Barracks:   return "🏯"
-        case UnitType.Stables:    return "🏇"   // STÁJE (odlišit od jezdce)
+        case UnitType.Stables:    return "🏇"   // stáje
         case UnitType.Warrior:    return "⚔️"
         case UnitType.Archer:     return "🏹"
-        case UnitType.Cavalry:    return "🐴"   // JEZDEC (odlišná ikonka)
+        case UnitType.Cavalry:    return "🐴"   // jezdec
         default:                  return "❓"
         }
     }
+
+    // ===== Visual =====
+    color: colorForOwner(unitModel ? unitModel.ownerId : 0)
+
+    border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
+    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
+
+    opacity: unitModel && unitModel.health <= 0 ? 0 : 1
 
     // --- ICON OVERLAY ---
     Text {
@@ -59,7 +66,7 @@ Rectangle {
         styleColor: "#000000aa"
     }
 
-    // Move Animation
+    // Move Animation (zůstává pro případ, že ji spustíš zvenku / v budoucnu)
     Rectangle {
         id: moveGlow
         anchors.fill: parent
@@ -104,14 +111,7 @@ Rectangle {
         PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.00; duration: 220 }
     }
 
-    NumberAnimation on x { id: moveAnimX; duration: 200; running: false }
-    NumberAnimation on y {
-        id: moveAnimY
-        duration: 200
-        running: false
-        onStopped: root.bindToModel()
-    }
-
+    // Binding na pozici modelu
     function bindToModel() {
         if (!mapGridObj) return
 
@@ -130,60 +130,27 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        enabled: !gameOver
+        enabled: !gameOver && unitModel !== null
 
-        drag.target: (unitModel && isOwnerTurn
-                      && controller.action.mode === ActionMode.Move
-                      && unitModel.unitSelected && !unitModel.isBuilding
-                      && unitModel.movementPoints > 0) ? root : null
+        drag.target: null
         drag.axis: Drag.XAndYAxis
 
-        drag.minimumX: mapGridObj ? mapGridObj.x : 0
-        drag.maximumX: mapGridObj ? mapGridObj.x + mapGridObj.width - width : 0
-        drag.minimumY: mapGridObj ? mapGridObj.y : 0
-        drag.maximumY: mapGridObj ? mapGridObj.y + mapGridObj.height - height : 0
-
         onPressed: {
+            // klik na vlastní jednotku = vybrat a ukázat reachable (Move)
             if (isOwnerTurn) {
-                controller.action.clearSelection()
-                controller.action.addToSelection(unitModel)
+                controller.action.trySelectUnit(unitModel)
                 controller.action.mode = ActionMode.Move
-            }
-            if (drag.active) {
-                root.originalPos = Qt.point(root.x, root.y)
-                root.x = root.x
-                root.y = root.y
             }
         }
 
         onClicked: {
+            // Attack enemy unit when in Attack mode
             if (!isOwnerTurn && controller.action.mode === ActionMode.Attack) {
-                let canAttack = controller.action.tryAttack(unitModel)
-                if (canAttack) {
+                let ok = controller.action.tryAttack(unitModel)
+                if (ok) {
                     hitAnim.restart()
                     root.attackSuccess()
                 }
-            }
-        }
-
-        onReleased: {
-            if (drag.target === root) {
-                let centerX = (root.x - mapGridObj.x) + (tileSize / 2)
-                let centerY = (root.y - mapGridObj.y) + (tileSize / 2)
-
-                let col = Math.floor(centerX / tileSize)
-                let row = Math.floor(centerY / tileSize)
-
-                if (controller.action.tryMoveSelectedTo(col, row)) {
-                    root.x = mapGridObj.x + col * tileSize
-                    root.y = mapGridObj.y + row * tileSize
-                    root.bindToModel()
-                } else {
-                    root.x = root.originalPos.x
-                    root.y = root.originalPos.y
-                    root.bindToModel()
-                }
-                controller.action.reachableTilesChanged()
             }
         }
     }
@@ -198,4 +165,3 @@ Rectangle {
         visible: !gameOver
     }
 }
-

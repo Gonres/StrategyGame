@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import StrategyGame 1.0
 import "../style" as Style
 
 ListView {
@@ -32,7 +31,6 @@ ListView {
             anchors.margins: 12
             spacing: 12
 
-            // ================= HLAVIČKA =================
             Column {
                 spacing: 6
                 Text {
@@ -48,29 +46,36 @@ ListView {
                 }
             }
 
-            // ================= STATY (JEDNOTKY) =================
+            // Staty jen pro jednotky
             Column {
                 visible: !modelData.isBuilding
                 spacing: 6
 
                 Row {
                     spacing: 12
-                    Text {
-                        text: "⚔️ Útok: " + modelData.attackDamage
-                        color: theme.statAttack
-                        font.pixelSize: 12
-                    }
-                    Text {
-                        text: "🏹 Dosah: " + modelData.attackRange
-                        color: theme.statRange
-                        font.pixelSize: 12
-                    }
+                    Text { text: "⚔️ Útok: " + modelData.attackDamage; color: theme.statAttack; font.pixelSize: 12 }
+                    Text { text: "🏹 Dosah: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
                 }
 
                 Text {
                     text: "🦶 Pohyb: " + modelData.movementPoints + " / " + modelData.movementRange
                     color: theme.statMove
                     font.pixelSize: 12
+                }
+
+                // Akce – jen Útok (pohyb je default). Zobrazíme pouze pro jednotky na tahu.
+                Button {
+                    visible: modelData.ownerId === controller.currentPlayerId
+                    text: "⚔️  Útok"
+                    height: 44
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    checkable: true
+                    checked: controller.action.mode === ActionMode.Attack
+                    enabled: !modelData.hasAttacked
+                    onClicked: {
+                        controller.action.mode = checked ? ActionMode.Attack : ActionMode.Move
+                    }
                 }
 
                 Text {
@@ -80,36 +85,7 @@ ListView {
                 }
             }
 
-            // ================= NOVĚ: ÚTOK (JEN JEDNOTKY) =================
-            Column {
-                visible: !modelData.isBuilding
-                spacing: 8
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                Text {
-                    text: "⚔️ Akce"
-                    color: theme.textSecondary
-                    font.pixelSize: 12
-                    font.bold: true
-                }
-
-                Button {
-                    text: "⚔️  Útok"
-                    height: 48
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    enabled: !modelData.hasAttacked
-                    checkable: true
-                    checked: controller.action.mode === ActionMode.Attack
-
-                    onClicked: {
-                        controller.action.mode = ActionMode.Attack
-                    }
-                }
-            }
-
-            // ================= STAVĚNÍ (STRONGHOLD) =================
+            // ===== Stavění (Stronghold) =====
             Column {
                 visible: modelData.unitType === UnitType.Stronghold
                 spacing: 10
@@ -129,13 +105,18 @@ ListView {
                     spacing: 10
 
                     Button {
-                        text: "🏗️  Kasárny"
+                        text: "🏗️  Kasárny (" + controller.unitCost(UnitType.Barracks) + "g)"
                         height: 48
                         anchors.left: parent.left
                         anchors.right: parent.right
                         checkable: true
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Barracks
+
+                        // ✅ nejde kliknout když nemáš gold (a jen když jsi na tahu)
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Barracks)
+
                         onClicked: {
                             controller.action.mode = ActionMode.Build
                             controller.action.chosenBuildType = UnitType.Barracks
@@ -143,13 +124,17 @@ ListView {
                     }
 
                     Button {
-                        text: "🏇  Stáje"
+                        text: "🏇  Stáje (" + controller.unitCost(UnitType.Stables) + "g)"
                         height: 48
                         anchors.left: parent.left
                         anchors.right: parent.right
                         checkable: true
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Stables
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Stables)
+
                         onClicked: {
                             controller.action.mode = ActionMode.Build
                             controller.action.chosenBuildType = UnitType.Stables
@@ -158,7 +143,7 @@ ListView {
                 }
             }
 
-            // ================= TRÉNINK (BARRACKS) =================
+            // ===== Trénink (Barracks) =====
             Column {
                 visible: modelData.unitType === UnitType.Barracks
                 spacing: 10
@@ -178,13 +163,17 @@ ListView {
                     spacing: 10
 
                     Button {
-                        text: "⚔️  Válečník"
+                        text: "⚔️  Válečník (" + controller.unitCost(UnitType.Warrior) + "g)"
                         height: 48
                         anchors.left: parent.left
                         anchors.right: parent.right
                         checkable: true
                         checked: controller.action.mode === ActionMode.Train
                                  && controller.action.chosenTrainType === UnitType.Warrior
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Warrior)
+
                         onClicked: {
                             controller.action.mode = ActionMode.Train
                             controller.action.chosenTrainType = UnitType.Warrior
@@ -192,13 +181,17 @@ ListView {
                     }
 
                     Button {
-                        text: "🏹  Lučištník"
+                        text: "🏹  Lučištník (" + controller.unitCost(UnitType.Archer) + "g)"
                         height: 48
                         anchors.left: parent.left
                         anchors.right: parent.right
                         checkable: true
                         checked: controller.action.mode === ActionMode.Train
                                  && controller.action.chosenTrainType === UnitType.Archer
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Archer)
+
                         onClicked: {
                             controller.action.mode = ActionMode.Train
                             controller.action.chosenTrainType = UnitType.Archer
@@ -207,7 +200,7 @@ ListView {
                 }
             }
 
-            // ================= TRÉNINK (STABLES) =================
+            // ===== Trénink (Stables) =====
             Column {
                 visible: modelData.unitType === UnitType.Stables
                 spacing: 10
@@ -227,13 +220,17 @@ ListView {
                     spacing: 10
 
                     Button {
-                        text: "🏇  Jezdec"
+                        text: "🏇  Jezdec (" + controller.unitCost(UnitType.Cavalry) + "g)"
                         height: 48
                         anchors.left: parent.left
                         anchors.right: parent.right
                         checkable: true
                         checked: controller.action.mode === ActionMode.Train
                                  && controller.action.chosenTrainType === UnitType.Cavalry
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Cavalry)
+
                         onClicked: {
                             controller.action.mode = ActionMode.Train
                             controller.action.chosenTrainType = UnitType.Cavalry

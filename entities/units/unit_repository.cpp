@@ -1,34 +1,59 @@
 #include "entities/units/unit_repository.h"
 
 UnitRepository::UnitRepository(QObject *parent)
-    : QObject{parent} {}
-
-QList<Unit *> UnitRepository::player1Units() const
+    : QObject{parent}
 {
-    return m_player1Units;
+    // Default for old behavior (2 players) until configured by GameController.
+    configurePlayers(2);
 }
 
-QList<Unit *> UnitRepository::player2Units() const
+void UnitRepository::configurePlayers(int playerCount)
 {
-    return m_player2Units;
-}
-
-void UnitRepository::addPlayer1Unit(UnitType::Type unitType, QPoint position)
-{
-    Unit *unit = Unit::create(unitType, position, this);
-    if (unit) {
-        m_player1Units.append(unit);
-        emit player1UnitsChanged();
+    if (playerCount < 2) {
+        playerCount = 2;
     }
+    if (playerCount > 4) {
+        playerCount = 4;
+    }
+
+    // Clear any existing units when reconfiguring.
+    clearUnits();
+    m_unitsByPlayer.clear();
+    m_unitsByPlayer.resize(playerCount);
+    emit unitsChanged();
 }
 
-void UnitRepository::addPlayer2Unit(UnitType::Type unitType, QPoint position)
+QList<Unit *> UnitRepository::allUnits() const
 {
-    Unit *unit = Unit::create(unitType, position, this);
-    if (unit) {
-        m_player2Units.append(unit);
-        emit player2UnitsChanged();
+    QList<Unit *> out;
+    for (const QList<Unit *> &list : m_unitsByPlayer) {
+        out.append(list);
     }
+    return out;
+}
+
+QList<Unit *> UnitRepository::unitsForPlayer(int playerId) const
+{
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
+        return {};
+    }
+    return m_unitsByPlayer[playerId];
+}
+
+void UnitRepository::addUnit(int playerId, UnitType::Type unitType, QPoint position)
+{
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
+        return;
+    }
+
+    Unit *unit = Unit::create(unitType, position, this);
+    if (!unit) {
+        return;
+    }
+
+    unit->setOwnerId(playerId);
+    m_unitsByPlayer[playerId].append(unit);
+    emit unitsChanged();
 }
 
 void UnitRepository::removeUnit(Unit *unit)
@@ -36,38 +61,42 @@ void UnitRepository::removeUnit(Unit *unit)
     if (!unit) {
         return;
     }
-    if (m_player1Units.contains(unit)) {
-        m_player1Units.removeAll(unit);
-        unit->deleteLater();
-        emit player1UnitsChanged();
-    } else if (m_player2Units.contains(unit)) {
-        m_player2Units.removeAll(unit);
-        unit->deleteLater();
-        emit player2UnitsChanged();
+
+    const int owner = unit->ownerId();
+    if (owner >= 0 && owner < m_unitsByPlayer.size()) {
+        if (m_unitsByPlayer[owner].removeAll(unit) > 0) {
+            unit->deleteLater();
+            emit unitsChanged();
+            return;
+        }
+    }
+
+    // Fallback: search all lists.
+    for (int i = 0; i < m_unitsByPlayer.size(); ++i) {
+        if (m_unitsByPlayer[i].removeAll(unit) > 0) {
+            unit->deleteLater();
+            emit unitsChanged();
+            return;
+        }
     }
 }
 
 void UnitRepository::clearUnits()
 {
-    qDeleteAll(m_player1Units);
-    m_player1Units.clear();
-    emit player1UnitsChanged();
-
-    qDeleteAll(m_player2Units);
-    m_player2Units.clear();
-    emit player2UnitsChanged();
+    for (QList<Unit *> &list : m_unitsByPlayer) {
+        qDeleteAll(list);
+        list.clear();
+    }
+    emit unitsChanged();
 }
 
 Unit *UnitRepository::getUnitAt(QPoint position) const
 {
-    for (Unit *unit : m_player1Units) {
-        if (unit->getPosition() == position) {
-            return unit;
-        }
-    }
-    for (Unit *unit : m_player2Units) {
-        if (unit->getPosition() == position) {
-            return unit;
+    for (const QList<Unit *> &list : m_unitsByPlayer) {
+        for (Unit *u : list) {
+            if (u && u->getPosition() == position) {
+                return u;
+            }
         }
     }
     return nullptr;

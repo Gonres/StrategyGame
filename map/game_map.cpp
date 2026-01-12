@@ -65,3 +65,24 @@ QList<Tile *> GameMap::getTiles() const
 {
     return m_grid;
 }
+
+// ✅ typ dlaždice na souřadnici
+TileType::Type GameMap::tileTypeAt(int x, int y) const
+{
+    if (x < 0 || y < 0) return TileType::Water; // bezpečně “neprochozí”
+    if (!isValid(static_cast<unsigned int>(x), static_cast<unsigned int>(y))) return TileType::Water;
+
+    const int idx = getIndex(static_cast<unsigned int>(x), static_cast<unsigned int>(y));
+    if (idx < 0 || idx >= m_grid.size()) return TileType::Water;
+
+    Tile *t = m_grid[idx];
+    if (!t) return TileType::Water;
+
+    return t->getType();
+}
+
+// ✅ prochozí = není voda
+bool GameMap::isPassable(int x, int y) const
+{
+    return tileTypeAt(x, y) != TileType::Water;
+}
