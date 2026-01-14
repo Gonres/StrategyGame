@@ -6,7 +6,7 @@
 class Player
 {
 public:
-    Player() = default;
+    Player();
     Player(int id, int startGold, int incomePerTurn);
 
     int id() const;

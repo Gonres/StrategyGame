@@ -7,6 +7,12 @@ Player::Player(int id, int startGold, int incomePerTurn)
 {
 }
 
+Player::Player(){
+    m_id = 0;
+    m_gold = 0;
+    m_incomePerTurn = 50;
+}
+
 int Player::id() const
 {
     return m_id;
