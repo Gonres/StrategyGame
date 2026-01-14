@@ -58,14 +58,19 @@ void GameController::resetGame()
     m_map.generateMap();
     m_unitRepository->configurePlayers(m_config.m_playerCount);
     setupPlayers();
-    setupStartingUnits();
+
+    // ✅ Úvodní fáze: hráči si postupně zvolí, kam položí Stronghold.
+    m_isPlacingStrongholds = true;
+    m_placementIndex = 0;
+    emit isPlacingStrongholdsChanged();
 
     m_currentPlayerId = 0;
     emit currentPlayerIdChanged();
     emit currentGoldChanged();
 
-    m_action.setMode(ActionMode::Move);
-    m_action.resetTurnForCurrentPlayer(m_currentPlayerId);
+    m_action.clearSelection();
+    m_action.setMode(ActionMode::PlaceStronghold);
+    m_action.refreshReachable();
 }
 
 void GameController::resetToDefaults()
@@ -92,24 +97,50 @@ void GameController::setupPlayers()
     }
 }
 
-void GameController::setupStartingUnits()
+bool GameController::isPlacingStrongholds() const
 {
-    const int off = 3;
-    const int cols = m_map.getColumns();
-    const int rows = m_map.getRows();
+    return m_isPlacingStrongholds;
+}
 
-    QVector<QPoint> spawns = {
-        QPoint(off, off),
-        QPoint(cols - 1 - off, off),
-        QPoint(off, rows - 1 - off),
-        QPoint(cols - 1 - off, rows - 1 - off)
-    };
+void GameController::advancePlacementPlayer()
+{
+    // Posun na dalšího hráče bez income a bez resetu jednotek (zatím žádné nemá).
+    m_currentPlayerId = (m_currentPlayerId + 1) % m_players.size();
+    emit currentPlayerIdChanged();
+    emit currentGoldChanged();
 
-    for (int i = 0; i < m_config.m_playerCount; ++i) {
-        QPoint p = spawns[i];
-        if (!m_map.isPassable(p.x(), p.y())) continue;
-        m_unitRepository->addUnit(i, UnitType::Stronghold, p);
+    m_action.clearSelection();
+    m_action.setMode(ActionMode::PlaceStronghold);
+    m_action.refreshReachable();
+}
+
+bool GameController::tryPlaceStrongholdAt(int x, int y)
+{
+    if (!m_running) return false;
+    if (!m_isPlacingStrongholds) return false;
+    if (!m_map.isValid(x, y)) return false;
+    if (!m_map.isPassable(x, y)) return false; // ❌ voda / neprostupné
+    if (m_unitRepository->getUnitAt(QPoint(x, y)) != nullptr) return false; // ❌ obsazeno
+
+    m_unitRepository->addUnit(m_currentPlayerId, UnitType::Stronghold, QPoint(x, y));
+
+    m_placementIndex++;
+    if (m_placementIndex >= m_players.size()) {
+        m_isPlacingStrongholds = false;
+        emit isPlacingStrongholdsChanged();
+
+        m_currentPlayerId = 0;
+        emit currentPlayerIdChanged();
+        emit currentGoldChanged();
+
+        m_action.clearSelection();
+        m_action.setMode(ActionMode::Move);
+        m_action.resetTurnForCurrentPlayer(m_currentPlayerId);
+        return true;
     }
+
+    advancePlacementPlayer();
+    return true;
 }
 
 bool GameController::spendForCurrentPlayer(int cost, const QString &failMsg)
@@ -126,6 +157,7 @@ bool GameController::spendForCurrentPlayer(int cost, const QString &failMsg)
 bool GameController::tryBuildAt(int x, int y)
 {
     if (!m_running) return false;
+    if (m_isPlacingStrongholds) return false;
     if (!m_map.isPassable(x, y)) return false;
 
     const int cost = unitCost(m_action.chosenBuildType());
@@ -138,6 +170,7 @@ bool GameController::tryBuildAt(int x, int y)
 bool GameController::tryTrainAt(int x, int y)
 {
     if (!m_running) return false;
+    if (m_isPlacingStrongholds) return false;
     if (!m_map.isPassable(x, y)) return false;
 
     const int cost = unitCost(m_action.chosenTrainType());
@@ -151,26 +184,15 @@ void GameController::advanceTurn()
 {
     m_currentPlayerId = (m_currentPlayerId + 1) % m_players.size();
     emit currentPlayerIdChanged();
-
-    int income = m_config.m_incomePerTurn;
-
-    const int bankBonusPerTurn = 25;
-    const int bankCount =
-        m_unitRepository->countTypeForPlayer(m_currentPlayerId, UnitType::Bank);
-
-    income += bankCount * bankBonusPerTurn;
-
-    m_players[m_currentPlayerId].addGold(income);
+    m_players[m_currentPlayerId].addGold(m_config.m_incomePerTurn);
     emit currentGoldChanged();
-
     m_action.resetTurnForCurrentPlayer(m_currentPlayerId);
 }
-
-
 
 void GameController::endTurn()
 {
     if (!m_running) return;
+    if (m_isPlacingStrongholds) return;
     if (!m_winnerText.isEmpty()) return;
 
     m_action.setMode(ActionMode::Move);
@@ -181,13 +203,13 @@ void GameController::endTurn()
     advanceTurn();
 }
 
-
 void GameController::checkVictory()
 {
     if (!m_running) return;
+    if (m_isPlacingStrongholds) return;
+
     if (!m_winnerText.isEmpty()) return;
 
-    // Hráč žije, pokud má jakoukoliv jednotku/budovu s health > 0
     QVector<bool> alive(m_config.m_playerCount, false);
 
     const QList<Unit*> all = m_unitRepository->allUnits();
@@ -224,10 +246,7 @@ void GameController::checkVictory()
     }
 }
 
-
-
 int GameController::unitCost(UnitType::Type type) const
 {
     return UnitType::cost(type);
 }
-

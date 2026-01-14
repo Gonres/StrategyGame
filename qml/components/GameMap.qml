@@ -234,6 +234,45 @@ Item {
                 }
 
                 // =============================================
+                // ✅ NOVÉ: INSTRUKCE PRO VÝBĚR ZÁKLADNY
+                // =============================================
+                Rectangle {
+                    id: placementBanner
+                    width: Math.min(parent.width, 820)
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    radius: 10
+                    color: theme.panelBg
+                    border.width: 1
+                    border.color: theme.panelBorder
+                    visible: !gameOver && controller && controller.action
+                             && controller.action.mode === ActionMode.PlaceStronghold
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 4
+
+                        Text {
+                            width: parent.width
+                            text: "🏰 Vyber si políčko, kde bude tvoje základna"
+                            color: theme.textPrimary
+                            font.pixelSize: 14
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: "Na vodu ani na obsazené políčko to nejde. Hraje: Hráč " + (controller.currentPlayerId + 1)
+                            color: theme.textMuted
+                            font.pixelSize: 12
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
+
+                // =============================================
                 // MAPA
                 // =============================================
                 Item {
@@ -262,10 +301,12 @@ Item {
                     }
 
                     // ✅ Klik mimo reachable / mimo jednotky -> zavři reachable + selection
+                    // (během výběru Strongholdu to nechceme – hráč musí jen vybrat políčko)
                     MouseArea {
                         anchors.fill: parent
                         z: 5
                         enabled: !gameOver
+                                 && !(controller && controller.action && controller.action.mode === ActionMode.PlaceStronghold)
                                  && (controller.action.selectedUnits.length > 0
                                      || controller.action.reachableTiles.length > 0)
                         onClicked: {
@@ -276,13 +317,25 @@ Item {
 
                     // ---------- Reachable highlights ----------
                     Repeater {
-                        model: !gameOver && selectedUnit
-                               && ((controller.action.mode === ActionMode.Move
-                                    && !selectedUnit.isBuilding)
-                                   || (controller.action.mode === ActionMode.Build
-                                       && selectedUnit.isBuilding)
-                                   || (controller.action.mode === ActionMode.Train
-                                       && selectedUnit.isBuilding)) ? controller.action.reachableTiles : []
+                        model: {
+                            if (gameOver || !controller || !controller.action) return []
+
+                            // ✅ Úvodní výběr základny: zobraz reachable pro celou mapu (passable & free)
+                            if (controller.action.mode === ActionMode.PlaceStronghold) {
+                                return controller.action.reachableTiles
+                            }
+
+                            // Normální režimy: jen když je vybraná jednotka a odpovídající mode
+                            if (!selectedUnit) return []
+
+                            if (controller.action.mode === ActionMode.Move && !selectedUnit.isBuilding)
+                                return controller.action.reachableTiles
+
+                            if ((controller.action.mode === ActionMode.Build || controller.action.mode === ActionMode.Train) && selectedUnit.isBuilding)
+                                return controller.action.reachableTiles
+
+                            return []
+                        }
 
                         delegate: Item {
                             width: centerArea.tileSize
@@ -305,24 +358,27 @@ Item {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     var ctrl = controller
+
+                                    // ✅ NOVÉ: úvodní umístění Strongholdu
+                                    if (ctrl.action.mode === ActionMode.PlaceStronghold) {
+                                        ctrl.tryPlaceStrongholdAt(modelData.x, modelData.y)
+                                        return
+                                    }
+
                                     if (ctrl.action.mode === ActionMode.Build) {
-                                        let ok = ctrl.tryBuildAt(modelData.x,
-                                                                 modelData.y)
+                                        let ok = ctrl.tryBuildAt(modelData.x, modelData.y)
                                         if (ok) {
                                             ctrl.action.clearSelection()
                                             ctrl.action.mode = ActionMode.Move
                                         }
                                     } else if (ctrl.action.mode === ActionMode.Train) {
-                                        let ok2 = ctrl.tryTrainAt(modelData.x,
-                                                                  modelData.y)
+                                        let ok2 = ctrl.tryTrainAt(modelData.x, modelData.y)
                                         if (ok2) {
                                             ctrl.action.clearSelection()
                                             ctrl.action.mode = ActionMode.Move
                                         }
                                     } else if (ctrl.action.mode === ActionMode.Move) {
-                                        ctrl.action.tryMoveSelectedTo(
-                                                    Qt.point(modelData.x,
-                                                             modelData.y))
+                                        ctrl.action.tryMoveSelectedTo(Qt.point(modelData.x, modelData.y))
                                     }
                                 }
                             }
@@ -359,12 +415,14 @@ Item {
 
                 // =============================================
                 // KONEC KOLA
+                // (během PlaceStronghold vypneme – tahy se ukončují automaticky po výběru základny)
                 // =============================================
                 MenuButton {
                     id: endTurnButton
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Konec kola"
                     enabled: !gameOver
+                             && !(controller && controller.action && controller.action.mode === ActionMode.PlaceStronghold)
                     onClicked: {
                         controller.action.mode = ActionMode.Move
                         controller.action.clearSelection()
@@ -392,7 +450,9 @@ Item {
                 Text {
                     visible: controller.action.selectedUnits.length === 0
                     anchors.centerIn: parent
-                    text: "Vyber jednotku\nna mapě"
+                    text: (controller && controller.action && controller.action.mode === ActionMode.PlaceStronghold)
+                          ? "Vyber políčko\npro základnu"
+                          : "Vyber jednotku\nna mapě"
                     color: theme.textMuted
                     font.pixelSize: 14
                     horizontalAlignment: Text.AlignHCenter
@@ -510,10 +570,7 @@ Item {
                     wrapMode: Text.WordWrap
                 }
 
-                Item {
-                    height: 6
-                    width: 1
-                }
+                Item { height: 6; width: 1 }
 
                 Row {
                     spacing: 12

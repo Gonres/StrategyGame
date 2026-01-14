@@ -24,7 +24,7 @@ Q_ENUM_NS(Type)
 inline int cost(Type t)
 {
     switch (t) {
-    case Stronghold: return 0;
+    case Stronghold: return 300;
 
     case Barracks:   return 80;
     case Stables:    return 90;

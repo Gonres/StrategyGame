@@ -116,8 +116,6 @@ bool Action::tryAttack(Unit *target)
     attacker->attack(target);
     attacker->markAttacked();
 
-    // Pokud cíl umřel, musíme ho odstranit z repository,
-    // jinak tam zůstane jako "duch" a vítězství se nikdy nevyhodnotí.
     const int targetHealth = target->property("health").toInt();
     if (targetHealth <= 0) {
         m_unitRepository->removeUnit(target);
@@ -145,6 +143,13 @@ void Action::recalcReachable()
 {
     m_reachableTiles.clear();
 
+    // ✅ Speciální režim: úvodní umístění Strongholdu – není potřeba mít vybranou jednotku.
+    if (m_mode == ActionMode::PlaceStronghold) {
+        m_reachableTiles = computeReachableForStrongholdPlacement();
+        emit reachableTilesChanged();
+        return;
+    }
+
     if (m_selectedUnits.isEmpty()) {
         emit reachableTilesChanged();
         return;
@@ -163,6 +168,25 @@ void Action::recalcReachable()
     }
 
     emit reachableTilesChanged();
+}
+
+QList<QPoint> Action::computeReachableForStrongholdPlacement() const
+{
+    QList<QPoint> out;
+    if (!m_map || !m_unitRepository) return out;
+
+    const int cols = m_map->getColumns();
+    const int rows = m_map->getRows();
+
+    for (int y = 0; y < rows; ++y) {
+        for (int x = 0; x < cols; ++x) {
+            if (!m_map->isValid(x, y)) continue;
+            if (!m_map->isPassable(x, y)) continue;                 // ❌ voda / neprostupné
+            if (m_unitRepository->getUnitAt(QPoint(x, y))) continue; // ❌ obsazeno
+            out.append(QPoint(x, y));
+        }
+    }
+    return out;
 }
 
 QList<QPoint> Action::computeReachableForMove(Unit *u) const

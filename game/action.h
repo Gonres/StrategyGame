@@ -76,6 +76,7 @@ private:
     void recalcReachable();
     QList<QPoint> computeReachableForMove(Unit *u) const;
     QList<QPoint> computeReachableForBuild(Unit *u) const;
+    QList<QPoint> computeReachableForStrongholdPlacement() const;
 };
 
 #endif // ACTION_H

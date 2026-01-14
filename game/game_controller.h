@@ -28,6 +28,7 @@ class GameController : public QObject
 
     Q_PROPERTY(QString winnerText READ winnerText NOTIFY winnerTextChanged)
 
+    Q_PROPERTY(bool isPlacingStrongholds READ isPlacingStrongholds NOTIFY isPlacingStrongholdsChanged)
 
 public:
     explicit GameController(QObject *parent = nullptr);
@@ -42,6 +43,7 @@ public:
     int currentGold() const;
 
     QString winnerText() const;
+    bool isPlacingStrongholds() const;
 
     Q_INVOKABLE void setGameConfig(int playerCount, int startGold);
     Q_INVOKABLE void startGame();
@@ -49,17 +51,15 @@ public:
 
     Q_INVOKABLE void endTurn();
 
-    // Called by QML when player chooses a specific tile for build/train
+    Q_INVOKABLE bool tryPlaceStrongholdAt(int x, int y);
+
     Q_INVOKABLE bool tryBuildAt(int x, int y);
     Q_INVOKABLE bool tryTrainAt(int x, int y);
 
-    // Keep old API name used in QML earlier
     Q_INVOKABLE void checkVictory();
     Q_INVOKABLE int unitCost(UnitType::Type t) const;
 
-
     Q_INVOKABLE void resetToDefaults();
-
 
 signals:
     void isRunningNotify();
@@ -67,12 +67,13 @@ signals:
     void currentPlayerIdChanged();
     void currentGoldChanged();
     void winnerTextChanged();
+    void isPlacingStrongholdsChanged();
 
 private:
     void resetGame();
     void setupPlayers();
-    void setupStartingUnits();
     void advanceTurn();
+    void advancePlacementPlayer();
 
     bool spendForCurrentPlayer(int cost, const QString &failMsg);
 
@@ -87,6 +88,9 @@ private:
     int m_currentPlayerId;
 
     QString m_winnerText;
+
+    bool m_isPlacingStrongholds = false;
+    int m_placementIndex = 0;
 };
 
 #endif // GAME_CONTROLLER_H

@@ -10,7 +10,8 @@ enum Mode {
     Move,
     Attack,
     Build,
-    Train
+    Train,
+    PlaceStronghold
 };
 Q_ENUM_NS(Mode)
 }
