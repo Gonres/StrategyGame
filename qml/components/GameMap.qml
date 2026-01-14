@@ -25,6 +25,31 @@ Item {
     property string winnerText: controller.winnerText
     property string lastMoveMessage: ""
 
+    // ================================
+    // ✅ Income nastavení (UI)
+    // ================================
+    property int baseIncomePerTurn: 50
+    property int bankBonusPerTurn: 25
+
+    // jednoduchý "refresh", aby se příjem přepočítal i po postavení banky
+    property int unitsRevision: controller && controller.unitRepository ? controller.unitRepository.allUnits.length : 0
+
+    function bankCountForCurrentPlayer() {
+        var _rev = unitsRevision
+        if (!controller || !controller.unitRepository) return 0
+        return controller.unitRepository.countTypeForPlayer(controller.currentPlayerId, UnitType.Bank)
+    }
+
+    function incomeText() {
+        var banks = bankCountForCurrentPlayer()
+        var total = baseIncomePerTurn + banks * bankBonusPerTurn
+
+        if (banks > 0) {
+            return "Příjem za tah: +" + total + " (" + baseIncomePerTurn + "g hráč + " + banks + "x" + bankBonusPerTurn + "g Banka)"
+        }
+        return "Příjem za tah: +" + total + " (" + baseIncomePerTurn + "g hráč)"
+    }
+
     function colorForPlayer(pid) {
         switch (pid) {
         case 0:
@@ -139,8 +164,9 @@ Item {
                     font.bold: true
                 }
 
+                // ✅ tady byla natvrdo +50 → teď se počítá (50g hráč + Nx25g Banka)
                 Text {
-                    text: "Příjem za tah: +50"
+                    text: incomeText()
                     color: theme.textMuted
                     font.pixelSize: 12
                 }

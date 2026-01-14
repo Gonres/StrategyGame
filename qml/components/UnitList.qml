@@ -29,23 +29,13 @@ ListView {
             anchors.margins: 12
             spacing: 10
 
-            // Header
-            Row {
-                spacing: 10
-                anchors.left: parent.left
-                anchors.right: parent.right
-
-                Text {
-                    text: modelData.displayName
-                    color: theme.textPrimary
-                    font.pixelSize: 15
-                    font.bold: true
-                    elide: Text.ElideRight
-                    width: parent.width - 10
-                }
+            Text {
+                color: theme.textPrimary
+                font.pixelSize: 15
+                font.bold: true
+                elide: Text.ElideRight
             }
 
-            // Základní info (pro všechny)
             Column {
                 spacing: 6
 
@@ -75,40 +65,37 @@ ListView {
 
                 Row {
                     spacing: 12
-                    Text {
-                        text: "🗡️ Útok: " + modelData.attack
-                        color: theme.statAttack
-                        font.pixelSize: 12
-                    }
-                    Text {
-                        text: "🛡️ Obrana: " + modelData.defense
-                        color: theme.statDefense
-                        font.pixelSize: 12
-                    }
+                    Text { text: "🗡️ Útok: " + modelData.attackDamage; color: theme.statAttack; font.pixelSize: 12 }
+                    Text { text: "🎯 Dostřel: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
                 }
 
                 Row {
                     spacing: 12
+                    Text { text: "👣 Pohyb: " + modelData.movementPoints + " / " + modelData.movementRange; color: theme.statMove; font.pixelSize: 12 }
                     Text {
-                        text: "👣 Pohyb: " + modelData.movement
-                        color: theme.statMove
-                        font.pixelSize: 12
-                    }
-                    Text {
-                        text: "🎯 Dostřel: " + modelData.range
-                        color: theme.statRange
+                        text: "⚠️ Útok v tahu: " + (modelData.hasAttacked ? "už použit" : "dostupný")
+                        color: modelData.hasAttacked ? theme.statUsed : theme.statReady
                         font.pixelSize: 12
                     }
                 }
 
-                Text {
-                    text: "⚠️ Útok v tahu: " + (modelData.hasAttacked ? "už použit" : "dostupný")
-                    color: modelData.hasAttacked ? theme.statUsed : theme.statReady
-                    font.pixelSize: 12
+                // Tlačítko ÚTOK
+                Button {
+                    text: "🗡️ Útok"
+                    height: 46
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+
+                    enabled: modelData.ownerId === controller.currentPlayerId
+                             && !modelData.hasAttacked
+                             && controller.action.selectedUnits.length > 0
+                             && controller.action.selectedUnits[0] === modelData
+
+                    onClicked: controller.action.mode = ActionMode.Attack
                 }
             }
 
-            // ===== Stavění (Stronghold) =====
+            // STAVĚNÍ – jen Stronghold
             Column {
                 visible: modelData.unitType === UnitType.Stronghold
                 spacing: 10
@@ -136,11 +123,9 @@ ListView {
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Barracks
 
-                        // ✅ nejde kliknout když nemáš gold (a jen když jsi na tahu) + ✅ prerekvizity
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Barracks)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
-                                                                       UnitType.Barracks)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Barracks)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Build
@@ -157,21 +142,57 @@ ListView {
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Stables
 
-                        // ✅ gold + ✅ prerekvizity (typicky: musíš mít Kasárny)
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Stables)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
-                                                                       UnitType.Stables)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Stables)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Build
                             controller.action.chosenBuildType = UnitType.Stables
                         }
                     }
+
+                    Button {
+                        text: "🏦  Banka (" + controller.unitCost(UnitType.Bank) + "g)"
+                        height: 48
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        checkable: true
+                        checked: controller.action.mode === ActionMode.Build
+                                 && controller.action.chosenBuildType === UnitType.Bank
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Bank)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Bank)
+
+                        onClicked: {
+                            controller.action.mode = ActionMode.Build
+                            controller.action.chosenBuildType = UnitType.Bank
+                        }
+                    }
+
+                    Button {
+                        text: "⛪  Kostel (" + controller.unitCost(UnitType.Church) + "g)"
+                        height: 48
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        checkable: true
+                        checked: controller.action.mode === ActionMode.Build
+                                 && controller.action.chosenBuildType === UnitType.Church
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Church)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Church)
+
+                        onClicked: {
+                            controller.action.mode = ActionMode.Build
+                            controller.action.chosenBuildType = UnitType.Church
+                        }
+                    }
                 }
             }
 
-            // ===== Trénink (Barracks) =====
+            // TRÉNINK – Barracks
             Column {
                 visible: modelData.unitType === UnitType.Barracks
                 spacing: 10
@@ -201,8 +222,7 @@ ListView {
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Warrior)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
-                                                                       UnitType.Warrior)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Warrior)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Train
@@ -221,8 +241,7 @@ ListView {
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Archer)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
-                                                                       UnitType.Archer)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Archer)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Train
@@ -232,7 +251,7 @@ ListView {
                 }
             }
 
-            // ===== Trénink (Stables) =====
+            // TRÉNINK – Stables
             Column {
                 visible: modelData.unitType === UnitType.Stables
                 spacing: 10
@@ -246,29 +265,56 @@ ListView {
                     font.bold: true
                 }
 
-                Column {
+                Button {
+                    text: "🏇  Jezdec (" + controller.unitCost(UnitType.Cavalry) + "g)"
+                    height: 48
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: 10
+                    checkable: true
+                    checked: controller.action.mode === ActionMode.Train
+                             && controller.action.chosenTrainType === UnitType.Cavalry
 
-                    Button {
-                        text: "🏇  Jezdec (" + controller.unitCost(UnitType.Cavalry) + "g)"
-                        height: 48
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        checkable: true
-                        checked: controller.action.mode === ActionMode.Train
-                                 && controller.action.chosenTrainType === UnitType.Cavalry
+                    enabled: modelData.ownerId === controller.currentPlayerId
+                             && controller.currentGold >= controller.unitCost(UnitType.Cavalry)
+                             && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Cavalry)
 
-                        enabled: modelData.ownerId === controller.currentPlayerId
-                                 && controller.currentGold >= controller.unitCost(UnitType.Cavalry)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
-                                                                       UnitType.Cavalry)
+                    onClicked: {
+                        controller.action.mode = ActionMode.Train
+                        controller.action.chosenTrainType = UnitType.Cavalry
+                    }
+                }
+            }
 
-                        onClicked: {
-                            controller.action.mode = ActionMode.Train
-                            controller.action.chosenTrainType = UnitType.Cavalry
-                        }
+            // TRÉNINK – Church => Priest
+            Column {
+                visible: modelData.unitType === UnitType.Church
+                spacing: 10
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                Text {
+                    text: "🎯 Trénink"
+                    color: theme.textSecondary
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+
+                Button {
+                    text: "🧙  Kněz (" + controller.unitCost(UnitType.Priest) + "g)"
+                    height: 48
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    checkable: true
+                    checked: controller.action.mode === ActionMode.Train
+                             && controller.action.chosenTrainType === UnitType.Priest
+
+                    enabled: modelData.ownerId === controller.currentPlayerId
+                             && controller.currentGold >= controller.unitCost(UnitType.Priest)
+                             && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Priest)
+
+                    onClicked: {
+                        controller.action.mode = ActionMode.Train
+                        controller.action.chosenTrainType = UnitType.Priest
                     }
                 }
             }

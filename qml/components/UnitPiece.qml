@@ -39,9 +39,14 @@ Rectangle {
         case UnitType.Stronghold: return "🏰"
         case UnitType.Barracks:   return "🏯"
         case UnitType.Stables:    return "🏇"   // stáje
+        case UnitType.Bank:       return "🏦"
+        case UnitType.Church:     return "⛪"
+
         case UnitType.Warrior:    return "⚔️"
         case UnitType.Archer:     return "🏹"
         case UnitType.Cavalry:    return "🐴"   // jezdec
+        case UnitType.Priest:     return "🧙"
+
         default:                  return "❓"
         }
     }

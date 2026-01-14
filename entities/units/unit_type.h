@@ -6,31 +6,38 @@ namespace UnitType {
 Q_NAMESPACE
 
 enum Type {
+    // Buildings
     Stronghold,
     Barracks,
     Stables,
+    Bank,
+    Church,
+
+    // Units
     Warrior,
     Archer,
-    Cavalry
+    Cavalry,
+    Priest
 };
 Q_ENUM_NS(Type)
 
-inline int cost(Type t) {
+inline int cost(Type t)
+{
     switch (t) {
     case Stronghold: return 0;
+
     case Barracks:   return 80;
     case Stables:    return 90;
+    case Bank:       return 110;
+    case Church:     return 95;
     case Warrior:    return 40;
     case Archer:     return 55;
     case Cavalry:    return 75;
+    case Priest:     return 60;
     default:         return 50;
     }
 }
 
-// - Stables require Barracks.
-// - Cavalry require Stables.
-// - Warrior/Archer require Barracks.
-// - Barracks require Stronghold.
 inline QList<Type> prerequisites(Type t)
 {
     switch (t) {
@@ -38,6 +45,8 @@ inline QList<Type> prerequisites(Type t)
         return {};
 
     case Barracks:
+    case Bank:
+    case Church:
         return { Stronghold };
 
     case Stables:
@@ -49,6 +58,9 @@ inline QList<Type> prerequisites(Type t)
 
     case Cavalry:
         return { Stables };
+
+    case Priest:
+        return { Church };
 
     default:
         return {};

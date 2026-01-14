@@ -1,14 +1,17 @@
 #ifndef UNIT_REPOSITORY_H
 #define UNIT_REPOSITORY_H
 
-#include "entities/units/unit.h"
-
 #include <QObject>
 #include <QQmlEngine>
 #include <QVector>
+#include <QList>
+#include <QPoint>
 
-// Stores all units grouped by playerId (0..playerCount-1).
-// QML reads allUnits for rendering.
+#include "entities/units/unit.h"
+#include "entities/units/unit_type.h"
+
+// Ukládá všechny jednotky/budovy podle hráče (0..playerCount-1).
+// QML používá allUnits pro vykreslení.
 class UnitRepository : public QObject
 {
     Q_OBJECT
@@ -19,18 +22,19 @@ class UnitRepository : public QObject
 public:
     explicit UnitRepository(QObject *parent = nullptr);
 
-    // Must be called when a new game starts.
     void configurePlayers(int playerCount);
 
     QList<Unit *> allUnits() const;
     QList<Unit *> unitsForPlayer(int playerId) const;
 
-    // Utility helpers for game rules.
+    // ===== Prerekvizity / helpery =====
     bool playerHasType(int playerId, UnitType::Type type) const;
 
-    // Returns true if player can build/train the given type according to
-    // UnitType::prerequisites().
+    // Lze vytvořit daný typ? (splněné prerekvizity)
     Q_INVOKABLE bool canCreate(int playerId, UnitType::Type type) const;
+
+    // Kolik daného typu hráč má (užitečné pro income z Banky apod.)
+    Q_INVOKABLE int countTypeForPlayer(int playerId, UnitType::Type type) const;
 
     void removeUnit(Unit *unit);
     void clearUnits();
@@ -42,7 +46,7 @@ signals:
     void unitsChanged();
 
 private:
-    QVector<QList<Unit *>> m_unitsByPlayer; // [playerId] => units
+    QVector<QList<Unit *>> m_unitsByPlayer; // [playerId] => jednotky
 };
 
 #endif // UNIT_REPOSITORY_H

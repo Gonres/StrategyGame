@@ -1,10 +1,14 @@
 #include "entities/units/unit.h"
 
 #include "entities/units/archer.h"
-#include "entities/buildings/barracks.h"
 #include "entities/units/cavalry.h"
-#include "entities/buildings/stables.h"
+#include "entities/units/priest.h"
 #include "entities/units/warrior.h"
+
+#include "entities/buildings/bank.h"
+#include "entities/buildings/barracks.h"
+#include "entities/buildings/church.h"
+#include "entities/buildings/stables.h"
 #include "entities/buildings/stronghold.h"
 
 Unit::Unit(UnitType::Type type, int maxHealth, int attackDamage,
@@ -47,12 +51,20 @@ Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
         return new Archer(position, parent);
     case UnitType::Cavalry:
         return new Cavalry(position, parent);
+    case UnitType::Priest:
+        return new Priest(position, parent);
+
     case UnitType::Stronghold:
         return new Stronghold(position, parent);
     case UnitType::Barracks:
         return new Barracks(position, parent);
     case UnitType::Stables:
         return new Stables(position, parent);
+    case UnitType::Bank:
+        return new Bank(position, parent);
+    case UnitType::Church:
+        return new Church(position, parent);
+
     default:
         return nullptr;
     }
@@ -201,12 +213,20 @@ QString Unit::unitTypeToString() const
         return "Lučištník";
     case UnitType::Cavalry:
         return "Jezdec";
+    case UnitType::Priest:
+        return "Kněz";
+
     case UnitType::Stronghold:
         return "Stronghold";
     case UnitType::Barracks:
         return "Kasárny";
     case UnitType::Stables:
         return "Stáje";
+    case UnitType::Bank:
+        return "Banka";
+    case UnitType::Church:
+        return "Kostel";
+
     default:
         return "Neznámé";
     }

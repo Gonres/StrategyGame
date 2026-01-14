@@ -69,6 +69,9 @@ qt_add_qml_module(appStrategyGame
         SOURCES game/game_config.h
         SOURCES game/player.h game/player.cpp
         QML_FILES qml/screens/NewGameMenu.qml
+        SOURCES entities/buildings/bank.h entities/buildings/bank.cpp
+        SOURCES entities/buildings/church.h entities/buildings/church.cpp
+        SOURCES entities/units/priest.h entities/units/priest.cpp
 )
 
 # aby fungovaly include typu <action.h> / <unit.h> i v qmltyperegistrations.cpp

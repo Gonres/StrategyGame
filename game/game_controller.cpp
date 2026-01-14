@@ -151,10 +151,22 @@ void GameController::advanceTurn()
 {
     m_currentPlayerId = (m_currentPlayerId + 1) % m_players.size();
     emit currentPlayerIdChanged();
-    m_players[m_currentPlayerId].addGold(m_config.m_incomePerTurn);
+
+    int income = m_config.m_incomePerTurn;
+
+    const int bankBonusPerTurn = 25;
+    const int bankCount =
+        m_unitRepository->countTypeForPlayer(m_currentPlayerId, UnitType::Bank);
+
+    income += bankCount * bankBonusPerTurn;
+
+    m_players[m_currentPlayerId].addGold(income);
     emit currentGoldChanged();
+
     m_action.resetTurnForCurrentPlayer(m_currentPlayerId);
 }
+
+
 
 void GameController::endTurn()
 {
