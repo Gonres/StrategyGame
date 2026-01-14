@@ -57,7 +57,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             MenuButton {
-                text: "1 vs 1  (2 hráči)"
+                text: "1 vs 1"
                 onClicked: {
                     selectedPlayerCount = 2
                     step = 1
@@ -65,7 +65,7 @@ Item {
             }
 
             MenuButton {
-                text: "1 vs 1 vs 1  (3 hráči)"
+                text: "1 vs 1 vs 1"
                 onClicked: {
                     selectedPlayerCount = 3
                     step = 1
@@ -73,7 +73,7 @@ Item {
             }
 
             MenuButton {
-                text: "1 vs 1 vs 1 vs 1  (4 hráči)"
+                text: "1 vs 1 vs 1 vs 1"
                 onClicked: {
                     selectedPlayerCount = 4
                     step = 1
@@ -95,17 +95,17 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
 
             MenuButton {
-                text: "300 gold  (rychlá hra)"
+                text: "300 gold"
                 onClicked: menuRoot.startRequested(selectedPlayerCount, 300)
             }
 
             MenuButton {
-                text: "500 gold  (vyvážená hra)"
+                text: "500 gold"
                 onClicked: menuRoot.startRequested(selectedPlayerCount, 500)
             }
 
             MenuButton {
-                text: "1000 gold  (dlouhá hra)"
+                text: "1000 gold"
                 onClicked: menuRoot.startRequested(selectedPlayerCount, 1000)
             }
 

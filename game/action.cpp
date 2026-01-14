@@ -104,6 +104,7 @@ bool Action::tryAttack(Unit *target)
 
     Unit *attacker = m_selectedUnits.first();
     if (!attacker || attacker->isBuilding()) return false;
+    if (!attacker->canAttack()) return false;
     if (attacker->hasAttacked()) return false;
     if (attacker->ownerId() == target->ownerId()) return false;
 
@@ -123,6 +124,39 @@ bool Action::tryAttack(Unit *target)
     }
 
     emit actionMessage("Útok!");
+    emit reachableTilesChanged();
+    return true;
+}
+
+bool Action::tryHeal(Unit *target)
+{
+    if (m_selectedUnits.isEmpty() || !target) return false;
+
+    Unit *healer = m_selectedUnits.first();
+    if (!healer || healer->isBuilding()) return false;
+
+    if (healer->getUnitType() != UnitType::Priest) return false;
+    if (healer->hasAttacked()) return false;
+
+    if (healer->ownerId() != target->ownerId()) return false;
+
+    const int dx = qAbs(healer->getPosition().x() - target->getPosition().x());
+    const int dy = qAbs(healer->getPosition().y() - target->getPosition().y());
+    const int dist = dx + dy;
+    if (dist > healer->getAttackRange()) return false;
+
+    const int maxHp = target->getMaxHealth();
+    const int curHp = target->getHealth();
+    if (curHp >= maxHp) return false;
+
+    const int healAmount = 200;
+    const int newHp = qMin(maxHp, curHp + healAmount);
+    target->setHealth(newHp);
+
+    // heal spotřebuje akci jako útok
+    healer->markAttacked();
+
+    emit actionMessage("Heal!");
     emit reachableTilesChanged();
     return true;
 }

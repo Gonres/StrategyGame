@@ -3,121 +3,48 @@
 UnitRepository::UnitRepository(QObject *parent)
     : QObject{parent}
 {
-    // Defaultně 2 hráči, dokud to nenastaví GameController.
     configurePlayers(2);
 }
 
 void UnitRepository::configurePlayers(int playerCount)
 {
-    if (playerCount < 2) {
-        playerCount = 2;
-    }
-    if (playerCount > 4) {
-        playerCount = 4;
-    }
+    if (playerCount < 2) playerCount = 2;
+    if (playerCount > 4) playerCount = 4;
 
     clearUnits();
     m_unitsByPlayer.clear();
     m_unitsByPlayer.resize(playerCount);
-
     emit unitsChanged();
 }
 
 QList<Unit *> UnitRepository::allUnits() const
 {
     QList<Unit *> out;
-    for (const QList<Unit *> &list : m_unitsByPlayer) {
-        out.append(list);
-    }
+    for (const QList<Unit *> &list : m_unitsByPlayer) out.append(list);
     return out;
 }
 
 QList<Unit *> UnitRepository::unitsForPlayer(int playerId) const
 {
-    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
-        return {};
-    }
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) return {};
     return m_unitsByPlayer[playerId];
-}
-
-bool UnitRepository::playerHasType(int playerId, UnitType::Type type) const
-{
-    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
-        return false;
-    }
-
-    const QList<Unit *> &list = m_unitsByPlayer[playerId];
-    for (Unit *u : list) {
-        if (!u) continue;
-        if (u->getHealth() <= 0) continue;
-        if (u->getUnitType() == type) return true;
-    }
-    return false;
-}
-
-bool UnitRepository::canCreate(int playerId, UnitType::Type type) const
-{
-    const QList<UnitType::Type> reqs = UnitType::prerequisites(type);
-    for (UnitType::Type req : reqs) {
-        if (!playerHasType(playerId, req)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-int UnitRepository::countTypeForPlayer(int playerId, UnitType::Type type) const
-{
-    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
-        return 0;
-    }
-
-    int count = 0;
-    const QList<Unit *> &list = m_unitsByPlayer[playerId];
-    for (Unit *u : list) {
-        if (!u) continue;
-        if (u->getHealth() <= 0) continue;
-        if (u->getUnitType() == type) {
-            count++;
-        }
-    }
-    return count;
 }
 
 void UnitRepository::addUnit(int playerId, UnitType::Type unitType, QPoint position)
 {
-    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
-        return;
-    }
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) return;
 
     Unit *unit = Unit::create(unitType, position, this);
-    if (!unit) {
-        return;
-    }
+    if (!unit) return;
 
     unit->setOwnerId(playerId);
     m_unitsByPlayer[playerId].append(unit);
-
     emit unitsChanged();
-}
-
-Unit *UnitRepository::getUnitAt(QPoint position) const
-{
-    for (const QList<Unit *> &list : m_unitsByPlayer) {
-        for (Unit *u : list) {
-            if (!u) continue;
-            if (u->getHealth() <= 0) continue;
-            if (u->getPosition() == position) return u;
-        }
-    }
-    return nullptr;
 }
 
 void UnitRepository::removeUnit(Unit *unit)
 {
-    if (!unit) {
-        return;
-    }
+    if (!unit) return;
 
     const int owner = unit->ownerId();
     if (owner >= 0 && owner < m_unitsByPlayer.size()) {
@@ -144,4 +71,39 @@ void UnitRepository::clearUnits()
         list.clear();
     }
     emit unitsChanged();
+}
+
+Unit *UnitRepository::getUnitAt(QPoint position) const
+{
+    for (const QList<Unit *> &list : m_unitsByPlayer) {
+        for (Unit *u : list) {
+            if (u && u->getPosition() == position) return u;
+        }
+    }
+    return nullptr;
+}
+
+int UnitRepository::countTypeForPlayer(int playerId, UnitType::Type type) const
+{
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) return 0;
+
+    int c = 0;
+    for (Unit *u : m_unitsByPlayer[playerId]) {
+        if (u && u->getUnitType() == type) c++;
+    }
+    return c;
+}
+
+bool UnitRepository::hasTypeForPlayer(int playerId, UnitType::Type type) const
+{
+    return countTypeForPlayer(playerId, type) > 0;
+}
+
+bool UnitRepository::canCreate(int playerId, UnitType::Type type) const
+{
+    const QList<UnitType::Type> req = UnitType::prerequisites(type);
+    for (UnitType::Type r : req) {
+        if (!hasTypeForPlayer(playerId, r)) return false;
+    }
+    return true;
 }

@@ -12,29 +12,36 @@ enum Type {
     Stables,
     Bank,
     Church,
+    SiegeWorkshop,
 
     // Units
     Warrior,
     Archer,
     Cavalry,
-    Priest
+    Priest,
+    Ram
 };
 Q_ENUM_NS(Type)
 
 inline int cost(Type t)
 {
     switch (t) {
-    case Stronghold: return 300;
+    case Stronghold:     return 500;
 
-    case Barracks:   return 80;
-    case Stables:    return 90;
-    case Bank:       return 110;
-    case Church:     return 95;
-    case Warrior:    return 40;
-    case Archer:     return 55;
-    case Cavalry:    return 75;
-    case Priest:     return 60;
-    default:         return 50;
+    case Barracks:       return 100;
+    case Stables:        return 100;
+    case Bank:           return 200;
+    case Church:         return 250;
+
+    case SiegeWorkshop:  return 250;
+
+    case Warrior:        return 50;
+    case Archer:         return 80;
+    case Cavalry:        return 80;
+    case Priest:         return 100;
+
+    case Ram:            return 300;
+    default:             return 50;
     }
 }
 
@@ -46,12 +53,18 @@ inline QList<Type> prerequisites(Type t)
 
     case Barracks:
     case Bank:
-    case Church:
         return { Stronghold };
 
     case Stables:
         return { Barracks };
 
+    case Church:
+        return { Bank };
+
+    case SiegeWorkshop:
+        return { Barracks, Stables };
+
+    // Jednotky
     case Warrior:
     case Archer:
         return { Barracks };
@@ -61,6 +74,9 @@ inline QList<Type> prerequisites(Type t)
 
     case Priest:
         return { Church };
+
+    case Ram:
+        return { SiegeWorkshop };
 
     default:
         return {};

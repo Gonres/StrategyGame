@@ -9,6 +9,8 @@ class Priest : public Unit
 
 public:
     Priest(QPoint position, QObject *parent);
+
+    bool canAttack() const override { return false; }
 };
 
 #endif // PRIEST_H

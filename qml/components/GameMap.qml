@@ -25,9 +25,6 @@ Item {
     property string winnerText: controller.winnerText
     property string lastMoveMessage: ""
 
-    // ================================
-    // ✅ Income nastavení (UI)
-    // ================================
     property int baseIncomePerTurn: 50
     property int bankBonusPerTurn: 25
 

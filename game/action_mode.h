@@ -9,6 +9,7 @@ Q_NAMESPACE
 enum Mode {
     Move,
     Attack,
+    Heal,
     Build,
     Train,
     PlaceStronghold

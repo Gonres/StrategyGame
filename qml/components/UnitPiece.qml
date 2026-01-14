@@ -12,6 +12,7 @@ Rectangle {
     property bool gameOver: false
 
     signal attackSuccess
+    signal healSuccess
 
     Style.Theme { id: theme }
 
@@ -36,18 +37,23 @@ Rectangle {
     // ✅ ikonka podle typu jednotky/budovy
     function iconForType(t) {
         switch (t) {
-        case UnitType.Stronghold: return "🏰"
-        case UnitType.Barracks:   return "🏯"
-        case UnitType.Stables:    return "🏇"   // stáje
-        case UnitType.Bank:       return "🏦"
-        case UnitType.Church:     return "⛪"
+        case UnitType.Stronghold:      return "🏰"
+        case UnitType.Barracks:        return "🏯"
+        case UnitType.Stables:         return "🏇"
+        case UnitType.Bank:            return "🏦"
+        case UnitType.Church:          return "⛪"
 
-        case UnitType.Warrior:    return "⚔️"
-        case UnitType.Archer:     return "🏹"
-        case UnitType.Cavalry:    return "🐴"   // jezdec
-        case UnitType.Priest:     return "🧙"
+        // jednotky
+        case UnitType.Warrior:         return "⚔️"
+        case UnitType.Archer:          return "🏹"
+        case UnitType.Cavalry:         return "🐴"
+        case UnitType.Priest:          return "🧙"
 
-        default:                  return "❓"
+        // obléhání
+        case UnitType.Ram:             return "🪓"
+        case UnitType.SiegeWorkshop:   return "🏗️"
+
+        default:                       return "❓"
         }
     }
 
@@ -71,7 +77,7 @@ Rectangle {
         styleColor: "#000000aa"
     }
 
-    // Move Animation (zůstává pro případ, že ji spustíš zvenku / v budoucnu)
+    // Move Animation
     Rectangle {
         id: moveGlow
         anchors.fill: parent
@@ -116,6 +122,28 @@ Rectangle {
         PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.00; duration: 220 }
     }
 
+    // Heal Animation (jemný flash)
+    Rectangle {
+        id: healFlash
+        anchors.fill: parent
+        radius: parent.radius
+        color: theme.unitMoveGlow
+        opacity: 0
+        visible: opacity > 0
+    }
+
+    SequentialAnimation {
+        id: healAnim
+        ParallelAnimation {
+            PropertyAnimation { target: healFlash; property: "opacity"; to: 0.55; duration: 90 }
+            SequentialAnimation {
+                PropertyAnimation { target: root; property: "scale"; to: 1.10; duration: 90 }
+                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 140 }
+            }
+        }
+        PropertyAnimation { target: healFlash; property: "opacity"; to: 0.00; duration: 220 }
+    }
+
     // Binding na pozici modelu
     function bindToModel() {
         if (!mapGridObj) return
@@ -141,21 +169,69 @@ Rectangle {
         drag.axis: Drag.XAndYAxis
 
         onPressed: {
-            // klik na vlastní jednotku = vybrat a ukázat reachable (Move)
-            if (isOwnerTurn) {
-                controller.action.trySelectUnit(unitModel)
-                controller.action.mode = ActionMode.Move
-            }
+            // ✅ Výběr vlastní jednotky jen když nejsme v Attack/Heal módu.
+            // (když je aktivní Heal/Attack, chceme klikem cíl, ne přepínat selection)
+            if (!isOwnerTurn)
+                return
+
+            if (controller.action.mode === ActionMode.Attack)
+                return
+
+            if (controller.action.mode === ActionMode.Heal)
+                return
+
+            controller.action.trySelectUnit(unitModel)
+            controller.action.mode = ActionMode.Move
         }
 
         onClicked: {
-            // Attack enemy unit when in Attack mode
-            if (!isOwnerTurn && controller.action.mode === ActionMode.Attack) {
-                let ok = controller.action.tryAttack(unitModel)
-                if (ok) {
+            if (!unitModel)
+                return
+
+            // ================
+            // ✅ HEAL MODE
+            // ================
+            if (controller.action.mode === ActionMode.Heal) {
+                // klik = cíl heal (typicky spojenec)
+                let okHeal = controller.action.tryHeal(unitModel)
+                if (okHeal) {
+                    healAnim.restart()
+                    root.healSuccess()
+                } else {
+                    // pokud heal nevyšel a klikl jsi na vlastní jednotku,
+                    // tak dovolíme vybrat jiného castera (např. jiného Priesta)
+                    if (isOwnerTurn) {
+                        controller.action.trySelectUnit(unitModel)
+                    }
+                }
+                return
+            }
+
+            // ================
+            // ✅ ATTACK MODE
+            // ================
+            if (controller.action.mode === ActionMode.Attack) {
+                // klik = cíl útoku (typicky nepřítel)
+                let okAtk = controller.action.tryAttack(unitModel)
+                if (okAtk) {
                     hitAnim.restart()
                     root.attackSuccess()
+                } else {
+                    // pokud útok nevyšel a je to vlastní jednotka, tak dovolíme přepnout útočníka
+                    if (isOwnerTurn) {
+                        controller.action.trySelectUnit(unitModel)
+                        controller.action.mode = ActionMode.Attack
+                    }
                 }
+                return
+            }
+
+            // ================
+            // ✅ NORMAL CLICK
+            // ================
+            if (isOwnerTurn) {
+                controller.action.trySelectUnit(unitModel)
+                controller.action.mode = ActionMode.Move
             }
         }
     }

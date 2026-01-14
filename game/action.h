@@ -41,6 +41,8 @@ public:
     Q_INVOKABLE bool tryMoveSelectedTo(QPoint dest);
     Q_INVOKABLE bool tryAttack(Unit *target);
 
+    Q_INVOKABLE bool tryHeal(Unit *target);
+
     void resetTurnForCurrentPlayer(int playerId);
 
     UnitType::Type chosenBuildType() const;

@@ -11,13 +11,11 @@ Item {
     anchors.right: parent.right
     height: parent.height
 
-    // vybraný objekt (první ze selectedUnits)
     property var selectedUnit:
         controller.action.selectedUnits.length > 0
             ? controller.action.selectedUnits[0]
             : null
 
-    // Seznam jednotek/budov (scrolluje se)
     ListView {
         id: unitList
 
@@ -46,8 +44,6 @@ Item {
                 spacing: 10
 
                 Text {
-                    // ✅ Pokud nemáš displayName, dej sem svůj název (unitTypeName / unitTypeToString)
-                    // text: modelData.unitTypeName
                     color: theme.textPrimary
                     font.pixelSize: 15
                     font.bold: true
@@ -82,9 +78,17 @@ Item {
                     spacing: 6
 
                     Row {
+                        visible: modelData.unitType !== UnitType.Priest
                         spacing: 12
                         Text { text: "🗡️ Útok: " + modelData.attackDamage; color: theme.statAttack; font.pixelSize: 12 }
                         Text { text: "🎯 Dostřel: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
+                    }
+
+                    Row {
+                        visible: modelData.unitType === UnitType.Priest
+                        spacing: 12
+                        Text { text: "💚 Heal: +200"; color: theme.statHealth; font.pixelSize: 12 }
+                        Text { text: "📏 Dosah: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
                     }
 
                     Row {
@@ -97,8 +101,21 @@ Item {
                         }
                     }
 
-                    // Tlačítko ÚTOK
+                    Text {
+                        visible: modelData.unitType === UnitType.Priest
+                                 && !modelData.hasAttacked
+                                 && controller.action.selectedUnits.length > 0
+                                 && controller.action.selectedUnits[0] === modelData
+                                 && controller.action.mode === ActionMode.Heal
+
+                        text: "💡 Klikni na spojence v dosahu, kterého chceš vyléčit."
+                        color: theme.textSecondary
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                    }
+
                     Button {
+                        visible: modelData.unitType !== UnitType.Priest
                         text: "🗡️ Útok"
                         height: 46
                         anchors.left: parent.left
@@ -112,7 +129,31 @@ Item {
                         onClicked: controller.action.mode = ActionMode.Attack
                     }
 
-                    // Self heal (odpočinek)
+                    Button {
+                        visible: modelData.unitType === UnitType.Priest
+
+                        text: modelData.hasAttacked
+                              ? "⛔ Heal už použitý"
+                              : (
+                                    controller.action.mode === ActionMode.Heal
+                                    && controller.action.selectedUnits.length > 0
+                                    && controller.action.selectedUnits[0] === modelData
+                                    ? "✅ Heal aktivní – vyber cíl"
+                                    : "💚 Heal spojence (+200 HP)"
+                                )
+
+                        height: 46
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && !modelData.hasAttacked
+                                 && controller.action.selectedUnits.length > 0
+                                 && controller.action.selectedUnits[0] === modelData
+
+                        onClicked: controller.action.mode = ActionMode.Heal
+                    }
+
                     Button {
                         text: "🛌 Odpočinout (+10% HP)"
                         height: 46
@@ -132,7 +173,6 @@ Item {
                     }
                 }
 
-                // STAVĚNÍ – jen Stronghold
                 Column {
                     visible: modelData.unitType === UnitType.Stronghold
                     spacing: 10
@@ -244,22 +284,35 @@ Item {
                                 controller.action.chosenBuildType = UnitType.Church
                             }
                         }
+
+                        Button {
+                            text: "🪓  Obléhací dílna (" + controller.unitCost(UnitType.SiegeWorkshop) + "g)"
+                            height: 48
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            checkable: true
+                            checked: controller.action.mode === ActionMode.Build
+                                     && controller.action.chosenBuildType === UnitType.SiegeWorkshop
+
+                            enabled: modelData.ownerId === controller.currentPlayerId
+                                     && controller.currentGold >= controller.unitCost(UnitType.SiegeWorkshop)
+                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.SiegeWorkshop)
+
+                            onClicked: {
+                                controller.action.mode = ActionMode.Build
+                                controller.action.chosenBuildType = UnitType.SiegeWorkshop
+                            }
+                        }
                     }
                 }
 
-                // TRÉNINK – Barracks
                 Column {
                     visible: modelData.unitType === UnitType.Barracks
                     spacing: 10
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text {
-                        text: "🎯 Trénink"
-                        color: theme.textSecondary
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
+                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
 
                     Column {
                         anchors.left: parent.left
@@ -306,19 +359,13 @@ Item {
                     }
                 }
 
-                // TRÉNINK – Stables
                 Column {
                     visible: modelData.unitType === UnitType.Stables
                     spacing: 10
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text {
-                        text: "🎯 Trénink"
-                        color: theme.textSecondary
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
+                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
 
                     Button {
                         text: "🏇  Jezdec (" + controller.unitCost(UnitType.Cavalry) + "g)"
@@ -340,19 +387,13 @@ Item {
                     }
                 }
 
-                // TRÉNINK – Church => Priest
                 Column {
                     visible: modelData.unitType === UnitType.Church
                     spacing: 10
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text {
-                        text: "🎯 Trénink"
-                        color: theme.textSecondary
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
+                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
 
                     Button {
                         text: "🧙  Kněz (" + controller.unitCost(UnitType.Priest) + "g)"
@@ -373,11 +414,38 @@ Item {
                         }
                     }
                 }
+
+                Column {
+                    visible: modelData.unitType === UnitType.SiegeWorkshop
+                    spacing: 10
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+
+                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
+
+                    Button {
+                        text: "🪓  Beranidlo (" + controller.unitCost(UnitType.Ram) + "g)"
+                        height: 48
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        checkable: true
+                        checked: controller.action.mode === ActionMode.Train
+                                 && controller.action.chosenTrainType === UnitType.Ram
+
+                        enabled: modelData.ownerId === controller.currentPlayerId
+                                 && controller.currentGold >= controller.unitCost(UnitType.Ram)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Ram)
+
+                        onClicked: {
+                            controller.action.mode = ActionMode.Train
+                            controller.action.chosenTrainType = UnitType.Ram
+                        }
+                    }
+                }
             }
         }
     }
 
-    // ✅ FIXNÍ SPODNÍ LIŠTA: Zničit (je pořád úplně dole v pravém sloupci)
     Rectangle {
         id: destroyBar
         anchors.left: parent.left
@@ -386,10 +454,8 @@ Item {
 
         height: (selectedUnit !== null) ? 62 : 0
         visible: selectedUnit !== null
-
         color: "transparent"
 
-        // malý padding, aby tlačítko nebylo nalepené na okraj
         Item {
             anchors.fill: parent
             anchors.margins: 8

@@ -72,6 +72,8 @@ qt_add_qml_module(appStrategyGame
         SOURCES entities/buildings/bank.h entities/buildings/bank.cpp
         SOURCES entities/buildings/church.h entities/buildings/church.cpp
         SOURCES entities/units/priest.h entities/units/priest.cpp
+        SOURCES entities/units/ram.h entities/units/ram.cpp
+        SOURCES entities/buildings/siege_workshop.h entities/buildings/siege_workshop.cpp
 )
 
 # aby fungovaly include typu <action.h> / <unit.h> i v qmltyperegistrations.cpp

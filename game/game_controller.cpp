@@ -89,6 +89,39 @@ void GameController::resetToDefaults()
     emit isRunningNotify();
 }
 
+void GameController::destroyUnit(Unit *unit)
+{
+    if (!m_running) return;
+    if (m_isPlacingStrongholds) return;
+    if (!unit) return;
+    if (!m_unitRepository) return;
+
+    if (unit->ownerId() != m_currentPlayerId) {
+        return;
+    }
+
+    m_action.setMode(ActionMode::Move);
+    m_action.clearSelection();
+
+    m_unitRepository->removeUnit(unit);
+
+    checkVictory();
+}
+
+bool GameController::destroyAt(int x, int y)
+{
+    if (!m_running) return false;
+    if (m_isPlacingStrongholds) return false;
+    if (!m_unitRepository) return false;
+
+    Unit *u = m_unitRepository->getUnitAt(QPoint(x, y));
+    if (!u) return false;
+
+    destroyUnit(u);
+    return true;
+}
+
+
 void GameController::setupPlayers()
 {
     m_players.clear();
@@ -180,14 +213,66 @@ bool GameController::tryTrainAt(int x, int y)
     return true;
 }
 
+
+void GameController::restUnit(Unit *unit)
+{
+    if (!m_running) return;
+    if (!unit) return;
+
+    // jen vlastní jednotka (a ne budova)
+    if (unit->isBuilding()) return;
+    if (unit->ownerId() != m_currentPlayerId) return;
+
+    // spotřebuje akci v tahu stejně jako útok
+    if (unit->hasAttacked()) return;
+
+    const int maxHp = unit->getMaxHealth();
+    const int curHp = unit->getHealth();
+    if (curHp >= maxHp) return;
+
+    // +10% z max HP, minimálně 1
+    int add = maxHp / 10;
+    if (add < 1) add = 1;
+
+    const int newHp = qMin(maxHp, curHp + add);
+    unit->setHealth(newHp);
+    unit->markAttacked();
+
+    emit m_action.actionMessage(QString("Odpočinek: +%1 HP").arg(add));
+}
+
+int GameController::bankCountForPlayer(int playerId) const
+{
+    int count = 0;
+
+    const QList<Unit*> all = m_unitRepository->allUnits();
+    for (Unit *u : all) {
+        if (!u) continue;
+        if (u->ownerId() != playerId) continue;
+
+        if (u->getUnitType() == UnitType::Bank) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+
 void GameController::advanceTurn()
 {
     m_currentPlayerId = (m_currentPlayerId + 1) % m_players.size();
     emit currentPlayerIdChanged();
-    m_players[m_currentPlayerId].addGold(m_config.m_incomePerTurn);
+
+    const int banks = bankCountForPlayer(m_currentPlayerId);
+    const int income = m_config.m_incomePerTurn + banks * 25;
+
+    m_players[m_currentPlayerId].addGold(income);
     emit currentGoldChanged();
+
     m_action.resetTurnForCurrentPlayer(m_currentPlayerId);
 }
+
 
 void GameController::endTurn()
 {
@@ -202,6 +287,7 @@ void GameController::endTurn()
 
     advanceTurn();
 }
+
 
 void GameController::checkVictory()
 {

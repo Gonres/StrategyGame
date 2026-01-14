@@ -15,6 +15,7 @@ class Unit : public QObject
     Q_PROPERTY(int maxHealth READ getMaxHealth CONSTANT)
     Q_PROPERTY(int attackDamage READ getAttackDamage CONSTANT)
     Q_PROPERTY(int attackRange READ getAttackRange CONSTANT)
+    Q_PROPERTY(bool canAttack READ canAttack CONSTANT)
     Q_PROPERTY(int movementRange READ getMovementRange CONSTANT)
     Q_PROPERTY(int movementPoints READ getMovementPoints NOTIFY movementPointsChanged)
     Q_PROPERTY(bool hasAttacked READ hasAttacked NOTIFY hasAttackedChanged)
@@ -50,10 +51,16 @@ public:
     int ownerId() const;
     QString unitTypeToString() const;
 
+    virtual bool canAttack() const;
+
     void setHealth(int newHealth);
     void setPosition(QPoint position);
     void setUnitSelected(bool selected);
     void setOwnerId(int ownerId);
+
+
+    virtual int damageAgainst(const Unit *target) const;
+
     void attack(Unit *target);
 
     Q_INVOKABLE void resetMovement();

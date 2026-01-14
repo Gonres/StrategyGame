@@ -56,10 +56,16 @@ public:
     Q_INVOKABLE bool tryBuildAt(int x, int y);
     Q_INVOKABLE bool tryTrainAt(int x, int y);
 
+    Q_INVOKABLE void restUnit(Unit *unit);
+
     Q_INVOKABLE void checkVictory();
     Q_INVOKABLE int unitCost(UnitType::Type t) const;
 
     Q_INVOKABLE void resetToDefaults();
+
+    Q_INVOKABLE void destroyUnit(Unit *unit);
+    Q_INVOKABLE bool destroyAt(int x, int y);
+
 
 signals:
     void isRunningNotify();
@@ -76,6 +82,7 @@ private:
     void advancePlacementPlayer();
 
     bool spendForCurrentPlayer(int cost, const QString &failMsg);
+    int bankCountForPlayer(int playerId) const;
 
 private:
     bool m_running;
