@@ -18,27 +18,49 @@ ListView {
         width: unitList.width
         height: contentCol.implicitHeight + 24
 
-        color: theme.cardBg
-        radius: 10
+        radius: 16
+        color: theme.panelBg
         border.width: 1
-        border.color: theme.cardBorder
+        border.color: theme.panelBorder
 
         Column {
             id: contentCol
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
+            anchors.fill: parent
             anchors.margins: 12
-            spacing: 12
+            spacing: 10
 
+            // Header
+            Row {
+                spacing: 10
+                anchors.left: parent.left
+                anchors.right: parent.right
+
+                Text {
+                    text: modelData.displayName
+                    color: theme.textPrimary
+                    font.pixelSize: 15
+                    font.bold: true
+                    elide: Text.ElideRight
+                    width: parent.width - 10
+                }
+            }
+
+            // Základní info (pro všechny)
             Column {
                 spacing: 6
+
                 Text {
-                    text: modelData.unitTypeName
-                    color: theme.textPrimary
-                    font.bold: true
-                    font.pixelSize: 17
+                    text: "📍 Pozice: (" + modelData.position.x + ", " + modelData.position.y + ")"
+                    color: theme.textSecondary
+                    font.pixelSize: 12
                 }
+
+                Text {
+                    text: "👤 Hráč: " + (modelData.ownerId + 1)
+                    color: theme.textSecondary
+                    font.pixelSize: 12
+                }
+
                 Text {
                     text: "💚 Životy: " + modelData.health + " / " + modelData.maxHealth
                     color: theme.statHealth
@@ -53,28 +75,29 @@ ListView {
 
                 Row {
                     spacing: 12
-                    Text { text: "⚔️ Útok: " + modelData.attackDamage; color: theme.statAttack; font.pixelSize: 12 }
-                    Text { text: "🏹 Dosah: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
+                    Text {
+                        text: "🗡️ Útok: " + modelData.attack
+                        color: theme.statAttack
+                        font.pixelSize: 12
+                    }
+                    Text {
+                        text: "🛡️ Obrana: " + modelData.defense
+                        color: theme.statDefense
+                        font.pixelSize: 12
+                    }
                 }
 
-                Text {
-                    text: "🦶 Pohyb: " + modelData.movementPoints + " / " + modelData.movementRange
-                    color: theme.statMove
-                    font.pixelSize: 12
-                }
-
-                // Akce – jen Útok (pohyb je default). Zobrazíme pouze pro jednotky na tahu.
-                Button {
-                    visible: modelData.ownerId === controller.currentPlayerId
-                    text: "⚔️  Útok"
-                    height: 44
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    checkable: true
-                    checked: controller.action.mode === ActionMode.Attack
-                    enabled: !modelData.hasAttacked
-                    onClicked: {
-                        controller.action.mode = checked ? ActionMode.Attack : ActionMode.Move
+                Row {
+                    spacing: 12
+                    Text {
+                        text: "👣 Pohyb: " + modelData.movement
+                        color: theme.statMove
+                        font.pixelSize: 12
+                    }
+                    Text {
+                        text: "🎯 Dostřel: " + modelData.range
+                        color: theme.statRange
+                        font.pixelSize: 12
                     }
                 }
 
@@ -113,9 +136,11 @@ ListView {
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Barracks
 
-                        // ✅ nejde kliknout když nemáš gold (a jen když jsi na tahu)
+                        // ✅ nejde kliknout když nemáš gold (a jen když jsi na tahu) + ✅ prerekvizity
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Barracks)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
+                                                                       UnitType.Barracks)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Build
@@ -132,8 +157,11 @@ ListView {
                         checked: controller.action.mode === ActionMode.Build
                                  && controller.action.chosenBuildType === UnitType.Stables
 
+                        // ✅ gold + ✅ prerekvizity (typicky: musíš mít Kasárny)
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Stables)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
+                                                                       UnitType.Stables)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Build
@@ -173,6 +201,8 @@ ListView {
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Warrior)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
+                                                                       UnitType.Warrior)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Train
@@ -191,6 +221,8 @@ ListView {
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Archer)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
+                                                                       UnitType.Archer)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Train
@@ -230,6 +262,8 @@ ListView {
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && controller.currentGold >= controller.unitCost(UnitType.Cavalry)
+                                 && controller.unitRepository.canCreate(controller.currentPlayerId,
+                                                                       UnitType.Cavalry)
 
                         onClicked: {
                             controller.action.mode = ActionMode.Train

@@ -1,5 +1,7 @@
 #include "entities/units/unit_repository.h"
 
+#include "entities/units/unit_type.h"
+
 UnitRepository::UnitRepository(QObject *parent)
     : QObject{parent}
 {
@@ -38,6 +40,32 @@ QList<Unit *> UnitRepository::unitsForPlayer(int playerId) const
         return {};
     }
     return m_unitsByPlayer[playerId];
+}
+
+bool UnitRepository::playerHasType(int playerId, UnitType::Type type) const
+{
+    if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
+        return false;
+    }
+
+    const QList<Unit *> &list = m_unitsByPlayer[playerId];
+    for (Unit *u : list) {
+        if (u && u->getUnitType() == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool UnitRepository::canCreate(int playerId, UnitType::Type type) const
+{
+    const QList<UnitType::Type> reqs = UnitType::prerequisites(type);
+    for (UnitType::Type req : reqs) {
+        if (!playerHasType(playerId, req)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void UnitRepository::addUnit(int playerId, UnitType::Type unitType, QPoint position)

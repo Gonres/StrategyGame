@@ -25,6 +25,13 @@ public:
     QList<Unit *> allUnits() const;
     QList<Unit *> unitsForPlayer(int playerId) const;
 
+    // Utility helpers for game rules.
+    bool playerHasType(int playerId, UnitType::Type type) const;
+
+    // Returns true if player can build/train the given type according to
+    // UnitType::prerequisites().
+    Q_INVOKABLE bool canCreate(int playerId, UnitType::Type type) const;
+
     void removeUnit(Unit *unit);
     void clearUnits();
 
