@@ -97,13 +97,11 @@ Window {
         }
     }
 
-    // ✅ SETTINGS + NÁPOVĚDA
+    // settings
     Component {
         id: settingsMenuComponent
         Screens.SettingsMenu {
             onBackRequested: stack.pop()
-
-            // tyhle signály jsme přidali do SettingsMenu.qml
             onRulesRequested: stack.push(helpRulesComponent)
             onUnitsRequested: stack.push(helpUnitsComponent)
             onTechTreeRequested: stack.push(helpTechTreeComponent)
@@ -116,7 +114,6 @@ Window {
             onBackRequested: stack.pop()
         }
     }
-
 
     Component {
         id: helpTechTreeComponent
