@@ -97,9 +97,30 @@ Window {
         }
     }
 
+    // ✅ SETTINGS + NÁPOVĚDA
     Component {
         id: settingsMenuComponent
         Screens.SettingsMenu {
+            onBackRequested: stack.pop()
+
+            // tyhle signály jsme přidali do SettingsMenu.qml
+            onRulesRequested: stack.push(helpRulesComponent)
+            onUnitsRequested: stack.push(helpUnitsComponent)
+            onTechTreeRequested: stack.push(helpTechTreeComponent)
+        }
+    }
+
+    Component {
+        id: helpRulesComponent
+        Screens.HelpRules {
+            onBackRequested: stack.pop()
+        }
+    }
+
+
+    Component {
+        id: helpTechTreeComponent
+        Screens.HelpTechTree {
             onBackRequested: stack.pop()
         }
     }

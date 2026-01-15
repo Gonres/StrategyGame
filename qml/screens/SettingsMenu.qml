@@ -9,11 +9,12 @@ Item {
     width: parent ? parent.width : 1280
     height: parent ? parent.height : 720
 
-    Style.Theme {
-        id: theme
-    }
+    Style.Theme { id: theme }
 
     signal backRequested
+    signal rulesRequested
+    signal unitsRequested
+    signal techTreeRequested
 
     Column {
         id: column
@@ -31,16 +32,23 @@ Item {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Zatím tady nic není"
+            text: "Nápověda a informace o hře"
             color: theme.textSecondary
             font.pixelSize: 16
         }
 
-        Rectangle {
-            width: 1
-            height: 18
-            color: "transparent"
+        Rectangle { width: 1; height: 10; color: "transparent" }
+
+        MenuButton {
+            text: "Jak se hra hraje"
+            onClicked: settingsRoot.rulesRequested()
         }
+
+        MenuButton {
+            text: "Vývojový strom"
+            onClicked: settingsRoot.techTreeRequested()
+        }
+
 
         MenuButton {
             text: "Zpět"

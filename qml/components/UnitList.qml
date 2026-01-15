@@ -197,7 +197,7 @@ Item {
                                  && controller.action.selectedUnits[0] === modelData
 
                         onClicked: {
-                            controller.restUnit(modelData)
+                            controller.action.restUnit(modelData)
                             controller.action.mode = ActionMode.Move
                         }
                     }

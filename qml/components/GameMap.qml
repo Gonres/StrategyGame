@@ -194,7 +194,7 @@ Item {
 
             Column {
                 anchors.fill: parent
-                spacing: 60
+                spacing: 12
 
                 // HLÁŠKY
                 Rectangle {

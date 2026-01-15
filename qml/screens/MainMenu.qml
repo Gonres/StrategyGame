@@ -49,7 +49,7 @@ Item {
         }
 
         MenuButton {
-            text: "Nastavení"
+            text: "Pravidla"
             onClicked: menuRoot.settingsRequested()
         }
 
