@@ -138,8 +138,7 @@ bool Action::tryAttack(Unit *target)
     attacker->attack(target);
     attacker->markAttacked();
 
-    const int targetHealth = target->property("health").toInt();
-    if (targetHealth <= 0) {
+    if (target->getHealth() <= 0) {
         m_unitRepository->removeUnit(target);
         setMode(ActionMode::Move);
         emit victoryStateMayHaveChanged();

@@ -1,18 +1,5 @@
 #include "entities/units/unit.h"
 
-#include "entities/units/archer.h"
-#include "entities/units/cavalry.h"
-#include "entities/units/priest.h"
-#include "entities/units/ram.h"
-#include "entities/units/warrior.h"
-
-#include "entities/buildings/bank.h"
-#include "entities/buildings/barracks.h"
-#include "entities/buildings/church.h"
-#include "entities/buildings/siege_workshop.h"
-#include "entities/buildings/stables.h"
-#include "entities/buildings/stronghold.h"
-
 Unit::Unit(UnitType::Type type, int maxHealth, int attackDamage,
            int attackRange, int movementRange, QPoint position, QObject *parent)
     : m_unitType(type),
@@ -43,40 +30,6 @@ Unit::Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent)
       m_isBuilding(true),
       m_ownerId(-1),
       QObject(parent) {}
-
-Unit *Unit::create(UnitType::Type unitType, QPoint position, QObject *parent)
-{
-    switch (unitType) {
-    // Units
-    case UnitType::Warrior:
-        return new Warrior(position, parent);
-    case UnitType::Archer:
-        return new Archer(position, parent);
-    case UnitType::Cavalry:
-        return new Cavalry(position, parent);
-    case UnitType::Priest:
-        return new Priest(position, parent);
-    case UnitType::Ram:
-        return new Ram(position, parent);
-
-    // Buildings
-    case UnitType::Stronghold:
-        return new Stronghold(position, parent);
-    case UnitType::Barracks:
-        return new Barracks(position, parent);
-    case UnitType::Stables:
-        return new Stables(position, parent);
-    case UnitType::Bank:
-        return new Bank(position, parent);
-    case UnitType::Church:
-        return new Church(position, parent);
-    case UnitType::SiegeWorkshop:
-        return new SiegeWorkshop(position, parent);
-
-    default:
-        return nullptr;
-    }
-}
 
 UnitType::Type Unit::getUnitType() const
 {

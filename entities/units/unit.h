@@ -1,7 +1,6 @@
 #ifndef UNIT_H
 #define UNIT_H
 
-#include "entities/units/unit_info.h"
 #include "entities/units/unit_type.h"
 #include <QObject>
 #include <QQmlEngine>
@@ -35,9 +34,6 @@ protected:
     Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent);
 
 public:
-    static Unit *create(UnitType::Type unitType, QPoint position,
-                        QObject *parent);
-
     UnitType::Type getUnitType() const;
     int getHealth() const;
     int getMaxHealth() const;

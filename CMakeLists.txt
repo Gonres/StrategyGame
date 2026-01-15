@@ -52,6 +52,8 @@ qt_add_qml_module(appStrategyGame
         entities/units/unit_info.h
         entities/units/unit.h
         entities/units/unit.cpp
+        entities/units/unit_factory.h
+        entities/units/unit_factory.cpp
         entities/units/unit_repository.h
         entities/units/unit_repository.cpp
         entities/units/warrior.h

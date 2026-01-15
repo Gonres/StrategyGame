@@ -1,7 +1,7 @@
 #include "entities/units/unit_repository.h"
+#include "entities/units/unit_factory.h"
 
-UnitRepository::UnitRepository(QObject *parent)
-    : QObject{parent}
+UnitRepository::UnitRepository(QObject *parent) : QObject{parent}
 {
     configurePlayers(2);
 }
@@ -38,13 +38,14 @@ QList<Unit *> UnitRepository::unitsForPlayer(int playerId) const
     return m_unitsByPlayer[playerId];
 }
 
-void UnitRepository::addUnit(int playerId, UnitType::Type unitType, QPoint position)
+void UnitRepository::addUnit(int playerId, UnitType::Type unitType,
+                             QPoint position)
 {
     if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
         return;
     }
 
-    Unit *unit = Unit::create(unitType, position, this);
+    Unit *unit = UnitFactory::createUnit(unitType, position, this);
     if (!unit) {
         return;
     }
@@ -99,7 +100,8 @@ Unit *UnitRepository::getUnitAt(QPoint position) const
     return nullptr;
 }
 
-int UnitRepository::countTypeForPlayer(int playerId, UnitType::Type type) const
+int UnitRepository::countTypeForPlayer(int playerId,
+                                       UnitType::Type type) const
 {
     if (playerId < 0 || playerId >= m_unitsByPlayer.size()) {
         return 0;
@@ -123,7 +125,7 @@ bool UnitRepository::canCreate(int playerId, UnitType::Type type) const
 {
     const QList<UnitType::Type> req = UnitType::prerequisites(type);
     for (UnitType::Type type : req) {
-        if (!hasTypeForPlayer(playerId, type))  {
+        if (!hasTypeForPlayer(playerId, type)) {
             return false;
         }
     }

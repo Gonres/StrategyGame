@@ -22,7 +22,8 @@ class GameController : public QObject
 
     // Multiplayer
     Q_PROPERTY(int playerCount READ playerCount NOTIFY playerCountChanged)
-    Q_PROPERTY(int currentPlayerId READ currentPlayerId NOTIFY currentPlayerIdChanged)
+    Q_PROPERTY(
+        int currentPlayerId READ currentPlayerId NOTIFY currentPlayerIdChanged)
     Q_PROPERTY(int currentGold READ currentGold NOTIFY currentGoldChanged)
 
 public:

@@ -183,7 +183,6 @@ void GameController::endTurn()
     advanceTurn();
 }
 
-
 void GameController::checkVictory()
 {
     if (!m_winnerText.isEmpty()) {
@@ -196,8 +195,7 @@ void GameController::checkVictory()
             continue;
         }
 
-        const int hp = unit->property("health").toInt();
-        if (hp <= 0) {
+        if (unit->getHealth() <= 0) {
             continue;
         }
 

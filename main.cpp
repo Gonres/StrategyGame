@@ -2,6 +2,7 @@
 #include "game/game_controller.h"
 #include "map/tile_type.h"
 #include "entities/units/unit_type.h"
+#include "units/unit_info.h"
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
