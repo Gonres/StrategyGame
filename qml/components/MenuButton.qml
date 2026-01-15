@@ -7,7 +7,7 @@ Rectangle {
 
     property alias text: label.text
 
-    // aby šlo použít i jako "výběrové" tlačítko v NewGameMenu
+    // aby šlo použít i jako výběrové tlačítko v NewGameMenu
     property bool checkable: false
     property bool checked: false
 

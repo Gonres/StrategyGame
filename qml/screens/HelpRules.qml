@@ -19,7 +19,7 @@ Item {
         }
     }
 
-    // ===== Reusable card =====
+    // Reusable card
     component InfoCard: Rectangle {
         id: card
         property string title: ""
