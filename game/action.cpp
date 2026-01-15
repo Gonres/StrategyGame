@@ -284,7 +284,7 @@ void Action::recalcReachable()
         return;
     }
 
-    if (m_mode == ActionMode::Attack) {
+    if (m_mode == ActionMode::Attack || m_mode == ActionMode::Heal) {
         m_reachableTiles = computeReachableForAttack(unit);
     } else {
         m_reachableTiles = computeReachableForMove(unit);
