@@ -7,6 +7,7 @@ class Player
 {
 public:
     Player();
+
     Player(int id, int startGold, int incomePerTurn);
 
     int id() const;

@@ -3,8 +3,8 @@
 GameMap::GameMap(unsigned int numberOfRows, unsigned int numberOfColumns,
                  QObject *parent)
     : QObject(parent),
-    m_rows(numberOfRows),
-    m_columns(numberOfColumns) {}
+      m_rows(numberOfRows),
+      m_columns(numberOfColumns) {}
 
 GameMap::~GameMap()
 {
@@ -66,22 +66,29 @@ QList<Tile *> GameMap::getTiles() const
     return m_grid;
 }
 
-// ✅ typ dlaždice na souřadnici
 TileType::Type GameMap::tileTypeAt(int x, int y) const
 {
-    if (x < 0 || y < 0) return TileType::Water; // bezpečně “neprochozí”
-    if (!isValid(static_cast<unsigned int>(x), static_cast<unsigned int>(y))) return TileType::Water;
+    if (x < 0 || y < 0) {
+        return TileType::Water;    // bezpečně “neprochozí”
+    }
+    if (!isValid(static_cast<unsigned int>(x), static_cast<unsigned int>(y))) {
+        return TileType::Water;
+    }
 
     const int idx = getIndex(static_cast<unsigned int>(x), static_cast<unsigned int>(y));
-    if (idx < 0 || idx >= m_grid.size()) return TileType::Water;
+    if (idx < 0 || idx >= m_grid.size()) {
+        return TileType::Water;
+    }
 
-    Tile *t = m_grid[idx];
-    if (!t) return TileType::Water;
+    Tile *type = m_grid[idx];
+    if (!type) {
+        return TileType::Water;
+    }
 
-    return t->getType();
+    return type->getType();
 }
 
-// ✅ prochozí = není voda
+// prochozí = není voda
 bool GameMap::isPassable(int x, int y) const
 {
     return tileTypeAt(x, y) != TileType::Water;

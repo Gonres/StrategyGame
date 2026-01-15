@@ -16,7 +16,6 @@ Window {
         id: theme
     }
 
-
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
@@ -90,7 +89,7 @@ Window {
         id: newGameMenuComponent
         Screens.NewGameMenu {
             onBackRequested: stack.pop()
-            onStartRequested: function(playerCount, startGold) {
+            onStartRequested: function (playerCount, startGold) {
                 controller.setGameConfig(playerCount, startGold)
                 controller.startGame()
                 stack.push(gameScreenComponent)
@@ -109,10 +108,9 @@ Window {
         id: gameScreenComponent
         Comp.GameMap {
             onBackRequested: {
-                controller.resetToDefaults()
+                controller.stopGame()
                 stack.pop(stack.get(0))
             }
         }
     }
-
 }

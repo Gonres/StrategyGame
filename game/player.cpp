@@ -2,12 +2,13 @@
 
 Player::Player(int id, int startGold, int incomePerTurn)
     : m_id(id),
-    m_gold(startGold),
-    m_incomePerTurn(incomePerTurn)
+      m_gold(startGold),
+      m_incomePerTurn(incomePerTurn)
 {
 }
 
-Player::Player(){
+Player::Player()
+{
     m_id = 0;
     m_gold = 0;
     m_incomePerTurn = 50;

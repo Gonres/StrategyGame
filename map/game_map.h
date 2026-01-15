@@ -28,8 +28,6 @@ public:
 
     Q_INVOKABLE int getIndex(unsigned int x, unsigned int y) const;
     Q_INVOKABLE bool isValid(unsigned int x, unsigned int y) const;
-
-    // ✅ nové helpery pro “voda = nechodit/nebuildit”
     Q_INVOKABLE TileType::Type tileTypeAt(int x, int y) const;
     Q_INVOKABLE bool isPassable(int x, int y) const; // true = není voda
 

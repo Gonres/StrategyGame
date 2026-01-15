@@ -1,8 +1,8 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#include <QObject>
 #include <QList>
+#include <QObject>
 #include <QPoint>
 
 #include "game/action_mode.h"
@@ -11,74 +11,61 @@
 #include "units/unit_repository.h"
 #include "units/unit_type.h"
 
-class Action : public QObject
-{
-    Q_OBJECT
-    QML_ELEMENT
+class Action : public QObject {
+  Q_OBJECT
+  QML_ELEMENT
 
-    Q_PROPERTY(QList<Unit*> selectedUnits READ selectedUnits NOTIFY selectedUnitsChanged)
-    Q_PROPERTY(ActionMode::Mode mode READ mode WRITE setMode NOTIFY modeChanged)
-    Q_PROPERTY(QList<QPoint> reachableTiles READ reachableTiles NOTIFY reachableTilesChanged)
-
-    Q_PROPERTY(UnitType::Type chosenBuildType READ chosenBuildType WRITE setChosenBuildType NOTIFY chosenBuildTypeChanged)
-    Q_PROPERTY(UnitType::Type chosenTrainType READ chosenTrainType WRITE setChosenTrainType NOTIFY chosenTrainTypeChanged)
+  Q_PROPERTY(QList<Unit *> selectedUnits READ selectedUnits NOTIFY
+                 selectedUnitsChanged)
+  Q_PROPERTY(ActionMode::Mode mode READ mode WRITE setMode NOTIFY modeChanged)
+  Q_PROPERTY(QList<QPoint> reachableTiles READ reachableTiles NOTIFY
+                 reachableTilesChanged)
+  Q_PROPERTY(UnitType::Type chosenUnitType READ chosenUnitType WRITE
+                 setChosenUnitType NOTIFY chosenUnitTypeChanged)
 
 public:
-    explicit Action(UnitRepository *repo, GameMap *map, QObject *parent = nullptr);
+  explicit Action(UnitRepository *repository, GameMap *map,
+                  QObject *parent = nullptr);
 
-    QList<Unit*> selectedUnits() const;
+  QList<Unit *> selectedUnits() const;
+  ActionMode::Mode mode() const;
+  void setMode(ActionMode::Mode mode);
+  QList<QPoint> reachableTiles() const;
+  void resetTurnForCurrentPlayer(int playerId);
 
-    ActionMode::Mode mode() const;
-    void setMode(ActionMode::Mode m);
+  UnitType::Type chosenUnitType() const;
 
-    QList<QPoint> reachableTiles() const;
+  void setChosenUnitType(UnitType::Type type);
 
-    // ===== QML volá =====
-    Q_INVOKABLE void clearSelection();
-    Q_INVOKABLE void refreshReachable();
-
-    Q_INVOKABLE void trySelectUnit(Unit *unit);
-    Q_INVOKABLE bool tryMoveSelectedTo(QPoint dest);
-    Q_INVOKABLE bool tryAttack(Unit *target);
-
-    Q_INVOKABLE bool tryHeal(Unit *target);
-
-    void resetTurnForCurrentPlayer(int playerId);
-
-    UnitType::Type chosenBuildType() const;
-    void setChosenBuildType(UnitType::Type t);
-
-    UnitType::Type chosenTrainType() const;
-    void setChosenTrainType(UnitType::Type t);
+  Q_INVOKABLE void clearSelection();
+  Q_INVOKABLE void trySelectUnit(Unit *unit);
+  Q_INVOKABLE bool tryMoveSelectedTo(QPoint destination);
+  Q_INVOKABLE bool tryAttack(Unit *target);
+  Q_INVOKABLE bool tryHeal(Unit *target);
+  Q_INVOKABLE void destroyUnit(Unit *unit);
+  Q_INVOKABLE bool putBoughtUnit(int x, int y, int currentPlayerId);
+  Q_INVOKABLE void restUnit(Unit *unit);
 
 signals:
-    void selectedUnitsChanged();
-    void modeChanged();
-    void reachableTilesChanged();
-
-    void chosenBuildTypeChanged();
-    void chosenTrainTypeChanged();
-
-    void actionMessage(const QString &msg);
-
-    void victoryStateMayHaveChanged();
+  void selectedUnitsChanged();
+  void modeChanged();
+  void reachableTilesChanged();
+  void chosenUnitTypeChanged();
+  void actionMessage(const QString &msg);
+  void victoryStateMayHaveChanged();
 
 private:
-    UnitRepository *m_unitRepository;
-    GameMap *m_map;
-
-    QList<Unit*> m_selectedUnits;
-    ActionMode::Mode m_mode;
-    QList<QPoint> m_reachableTiles;
-
-    UnitType::Type m_chosenBuildType;
-    UnitType::Type m_chosenTrainType;
+  UnitRepository *m_unitRepository;
+  GameMap *m_map;
+  QList<Unit *> m_selectedUnits;
+  ActionMode::Mode m_mode;
+  QList<QPoint> m_reachableTiles;
+  UnitType::Type m_chosenUnitType;
 
 private:
-    void recalcReachable();
-    QList<QPoint> computeReachableForMove(Unit *u) const;
-    QList<QPoint> computeReachableForBuild(Unit *u) const;
-    QList<QPoint> computeReachableForStrongholdPlacement() const;
+  void recalcReachable();
+  QList<QPoint> computeReachableForMove(Unit *unit) const;
+  QList<QPoint> computeReachableForAttack(Unit *unit) const;
 };
 
 #endif // ACTION_H

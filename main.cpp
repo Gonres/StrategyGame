@@ -23,17 +23,21 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableMetaObject(ActionMode::staticMetaObject, "StrategyGame",
                                      1, 0, "ActionMode", "ActionMode is an enum");
 
+    qRegisterMetaType<UnitData>("UnitData");
+
     GameController controller;
+    UnitInfo unitInfo;
 
     QQmlApplicationEngine engine;
     QQmlContext *context = engine.rootContext();
     context->setContextProperty("controller", &controller);
+    context->setContextProperty("unitInfo", &unitInfo);
 
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
-        []() {
-            QCoreApplication::exit(-1);
-        }, Qt::QueuedConnection);
+    []() {
+        QCoreApplication::exit(-1);
+    }, Qt::QueuedConnection);
 
     engine.loadFromModule("StrategyGame", "Main");
 

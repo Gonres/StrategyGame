@@ -2,7 +2,7 @@
 
 Tile::Tile(TileType::Type type, QObject *parent)
     : QObject(parent),
-    m_type(type) {}
+      m_type(type) {}
 
 TileType::Type Tile::getType() const
 {

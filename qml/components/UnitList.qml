@@ -5,16 +5,16 @@ import "../style" as Style
 Item {
     id: root
 
-    Style.Theme { id: theme }
+    Style.Theme {
+        id: theme
+    }
 
     anchors.left: parent.left
     anchors.right: parent.right
     height: parent.height
 
-    property var selectedUnit:
-        controller.action.selectedUnits.length > 0
-            ? controller.action.selectedUnits[0]
-            : null
+    property var selectedUnit: controller.action.selectedUnits.length
+                               > 0 ? controller.action.selectedUnits[0] : null
 
     ListView {
         id: unitList
@@ -54,7 +54,8 @@ Item {
                     spacing: 6
 
                     Text {
-                        text: "📍 Pozice: (" + modelData.position.x + ", " + modelData.position.y + ")"
+                        text: "📍 Pozice: (" + modelData.position.x + ", "
+                              + modelData.position.y + ")"
                         color: theme.textSecondary
                         font.pixelSize: 12
                     }
@@ -80,22 +81,44 @@ Item {
                     Row {
                         visible: modelData.unitType !== UnitType.Priest
                         spacing: 12
-                        Text { text: "🗡️ Útok: " + modelData.attackDamage; color: theme.statAttack; font.pixelSize: 12 }
-                        Text { text: "🎯 Dostřel: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
+                        Text {
+                            text: "🗡️ Útok: " + modelData.attackDamage
+                            color: theme.statAttack
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: "🎯 Dostřel: " + modelData.attackRange
+                            color: theme.statRange
+                            font.pixelSize: 12
+                        }
                     }
 
                     Row {
                         visible: modelData.unitType === UnitType.Priest
                         spacing: 12
-                        Text { text: "💚 Heal: +200"; color: theme.statHealth; font.pixelSize: 12 }
-                        Text { text: "📏 Dosah: " + modelData.attackRange; color: theme.statRange; font.pixelSize: 12 }
+                        Text {
+                            text: "💚 Heal: +200"
+                            color: theme.statHealth
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: "📏 Dosah: " + modelData.attackRange
+                            color: theme.statRange
+                            font.pixelSize: 12
+                        }
                     }
 
                     Row {
                         spacing: 12
-                        Text { text: "👣 Pohyb: " + modelData.movementPoints + " / " + modelData.movementRange; color: theme.statMove; font.pixelSize: 12 }
                         Text {
-                            text: "⚡ Akce v tahu: " + (modelData.hasAttacked ? "už použitá" : "dostupná")
+                            text: "👣 Pohyb: " + modelData.movementPoints
+                                  + " / " + modelData.movementRange
+                            color: theme.statMove
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            text: "⚡ Akce v tahu: "
+                                  + (modelData.hasAttacked ? "už použitá" : "dostupná")
                             color: modelData.hasAttacked ? theme.statUsed : theme.statReady
                             font.pixelSize: 12
                         }
@@ -108,7 +131,7 @@ Item {
                                  && controller.action.selectedUnits[0] === modelData
                                  && controller.action.mode === ActionMode.Heal
 
-                        text: "💡 Klikni na spojence v dosahu, kterého chceš vyléčit."
+                        text: "💡 Klikni na spojence v dosahu"
                         color: theme.textSecondary
                         font.pixelSize: 12
                         wrapMode: Text.WordWrap
@@ -120,38 +143,45 @@ Item {
                         height: 46
                         anchors.left: parent.left
                         anchors.right: parent.right
+                        checkable: true
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && !modelData.hasAttacked
                                  && controller.action.selectedUnits.length > 0
                                  && controller.action.selectedUnits[0] === modelData
 
-                        onClicked: controller.action.mode = ActionMode.Attack
+                        checked: controller.action.mode === ActionMode.Attack
+                        onClicked: {
+                            if (controller.action.mode === ActionMode.Attack) {
+                                controller.action.mode = ActionMode.Move
+                            } else {
+                                controller.action.mode = ActionMode.Attack
+                            }
+                        }
                     }
 
                     Button {
                         visible: modelData.unitType === UnitType.Priest
 
-                        text: modelData.hasAttacked
-                              ? "⛔ Heal už použitý"
-                              : (
-                                    controller.action.mode === ActionMode.Heal
-                                    && controller.action.selectedUnits.length > 0
-                                    && controller.action.selectedUnits[0] === modelData
-                                    ? "✅ Heal aktivní – vyber cíl"
-                                    : "💚 Heal spojence (+200 HP)"
-                                )
+                        text: modelData.hasAttacked ? "⛔ Heal už použitý" : "💚 Heal spojence (+15 HP)"
 
                         height: 46
                         anchors.left: parent.left
                         anchors.right: parent.right
+                        checkable: true
 
                         enabled: modelData.ownerId === controller.currentPlayerId
                                  && !modelData.hasAttacked
                                  && controller.action.selectedUnits.length > 0
                                  && controller.action.selectedUnits[0] === modelData
-
-                        onClicked: controller.action.mode = ActionMode.Heal
+                        checked: controller.action.mode === ActionMode.Heal
+                        onClicked: {
+                            if (controller.action.mode === ActionMode.Heal) {
+                                controller.action.mode = ActionMode.Move
+                            } else {
+                                controller.action.mode = ActionMode.Heal
+                            }
+                        }
                     }
 
                     Button {
@@ -191,117 +221,34 @@ Item {
                         anchors.right: parent.right
                         spacing: 10
 
-                        Button {
-                            text: "🏰  Stronghold (" + controller.unitCost(UnitType.Stronghold) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.Stronghold
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Stronghold)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.Stronghold
-                            }
+                            unitType: UnitType.Barracks
                         }
 
-                        Button {
-                            text: "🏗️  Kasárny (" + controller.unitCost(UnitType.Barracks) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.Barracks
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Barracks)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Barracks)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.Barracks
-                            }
+                            unitType: UnitType.Stables
                         }
 
-                        Button {
-                            text: "🏇  Stáje (" + controller.unitCost(UnitType.Stables) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.Stables
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Stables)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Stables)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.Stables
-                            }
+                            unitType: UnitType.Bank
                         }
 
-                        Button {
-                            text: "🏦  Banka (" + controller.unitCost(UnitType.Bank) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.Bank
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Bank)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Bank)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.Bank
-                            }
+                            unitType: UnitType.Church
                         }
 
-                        Button {
-                            text: "⛪  Kostel (" + controller.unitCost(UnitType.Church) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.Church
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Church)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Church)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.Church
-                            }
-                        }
-
-                        Button {
-                            text: "🪓  Obléhací dílna (" + controller.unitCost(UnitType.SiegeWorkshop) + "g)"
-                            height: 48
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Build
-                                     && controller.action.chosenBuildType === UnitType.SiegeWorkshop
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.SiegeWorkshop)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.SiegeWorkshop)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Build
-                                controller.action.chosenBuildType = UnitType.SiegeWorkshop
-                            }
+                            unitType: UnitType.SiegeWorkshop
                         }
                     }
                 }
@@ -312,49 +259,28 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
+                    Text {
+                        text: "🎯 Trénink"
+                        color: theme.textSecondary
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
 
                     Column {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         spacing: 10
 
-                        Button {
-                            text: "⚔️  Válečník (" + controller.unitCost(UnitType.Warrior) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Train
-                                     && controller.action.chosenTrainType === UnitType.Warrior
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Warrior)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Warrior)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Train
-                                controller.action.chosenTrainType = UnitType.Warrior
-                            }
+                            unitType: UnitType.Warrior
                         }
 
-                        Button {
-                            text: "🏹  Lučištník (" + controller.unitCost(UnitType.Archer) + "g)"
-                            height: 48
+                        BuyUnitButton {
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            checkable: true
-                            checked: controller.action.mode === ActionMode.Train
-                                     && controller.action.chosenTrainType === UnitType.Archer
-
-                            enabled: modelData.ownerId === controller.currentPlayerId
-                                     && controller.currentGold >= controller.unitCost(UnitType.Archer)
-                                     && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Archer)
-
-                            onClicked: {
-                                controller.action.mode = ActionMode.Train
-                                controller.action.chosenTrainType = UnitType.Archer
-                            }
+                            unitType: UnitType.Archer
                         }
                     }
                 }
@@ -365,25 +291,17 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
+                    Text {
+                        text: "🎯 Trénink"
+                        color: theme.textSecondary
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
 
-                    Button {
-                        text: "🏇  Jezdec (" + controller.unitCost(UnitType.Cavalry) + "g)"
-                        height: 48
+                    BuyUnitButton {
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        checkable: true
-                        checked: controller.action.mode === ActionMode.Train
-                                 && controller.action.chosenTrainType === UnitType.Cavalry
-
-                        enabled: modelData.ownerId === controller.currentPlayerId
-                                 && controller.currentGold >= controller.unitCost(UnitType.Cavalry)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Cavalry)
-
-                        onClicked: {
-                            controller.action.mode = ActionMode.Train
-                            controller.action.chosenTrainType = UnitType.Cavalry
-                        }
+                        unitType: UnitType.Cavalry
                     }
                 }
 
@@ -393,25 +311,17 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
+                    Text {
+                        text: "🎯 Trénink"
+                        color: theme.textSecondary
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
 
-                    Button {
-                        text: "🧙  Kněz (" + controller.unitCost(UnitType.Priest) + "g)"
-                        height: 48
+                    BuyUnitButton {
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        checkable: true
-                        checked: controller.action.mode === ActionMode.Train
-                                 && controller.action.chosenTrainType === UnitType.Priest
-
-                        enabled: modelData.ownerId === controller.currentPlayerId
-                                 && controller.currentGold >= controller.unitCost(UnitType.Priest)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Priest)
-
-                        onClicked: {
-                            controller.action.mode = ActionMode.Train
-                            controller.action.chosenTrainType = UnitType.Priest
-                        }
+                        unitType: UnitType.Priest
                     }
                 }
 
@@ -421,25 +331,17 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
 
-                    Text { text: "🎯 Trénink"; color: theme.textSecondary; font.pixelSize: 12; font.bold: true }
+                    Text {
+                        text: "🎯 Trénink"
+                        color: theme.textSecondary
+                        font.pixelSize: 12
+                        font.bold: true
+                    }
 
-                    Button {
-                        text: "🪓  Beranidlo (" + controller.unitCost(UnitType.Ram) + "g)"
-                        height: 48
+                    BuyUnitButton {
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        checkable: true
-                        checked: controller.action.mode === ActionMode.Train
-                                 && controller.action.chosenTrainType === UnitType.Ram
-
-                        enabled: modelData.ownerId === controller.currentPlayerId
-                                 && controller.currentGold >= controller.unitCost(UnitType.Ram)
-                                 && controller.unitRepository.canCreate(controller.currentPlayerId, UnitType.Ram)
-
-                        onClicked: {
-                            controller.action.mode = ActionMode.Train
-                            controller.action.chosenTrainType = UnitType.Ram
-                        }
+                        unitType: UnitType.Ram
                     }
                 }
             }
@@ -467,9 +369,8 @@ Item {
 
                 height: 46
 
-                text: selectedUnit && selectedUnit.isBuilding
-                      ? "🗑️ Zničit budovu"
-                      : "🗑️ Zničit jednotku"
+                text: selectedUnit
+                      && selectedUnit.isBuilding ? "🗑️ Zničit budovu" : "🗑️ Zničit jednotku"
 
                 enabled: selectedUnit !== null
                          && selectedUnit.ownerId === controller.currentPlayerId
@@ -477,8 +378,7 @@ Item {
                 onClicked: {
                     if (!selectedUnit)
                         return
-
-                    controller.destroyUnit(selectedUnit)
+                    controller.action.destroyUnit(selectedUnit)
                     controller.action.mode = ActionMode.Move
                     controller.action.clearSelection()
                 }

@@ -14,62 +14,46 @@ Rectangle {
     signal attackSuccess
     signal healSuccess
 
-    Style.Theme { id: theme }
+    Style.Theme {
+        id: theme
+    }
 
     width: tileSize
     height: tileSize
     radius: 7
     z: 20
 
-    // ===== Helpers =====
-    readonly property bool isOwnerTurn: unitModel && (unitModel.ownerId === controller.currentPlayerId)
+    readonly property bool isOwnerTurn: unitModel
+                                        && (unitModel.ownerId === controller.currentPlayerId)
 
     function colorForOwner(ownerId) {
         switch (ownerId) {
-        case 0: return theme.unitP1
-        case 1: return theme.unitP2
-        case 2: return theme.unitP3
-        case 3: return theme.unitP4
-        default: return theme.unitP1
+        case 0:
+            return theme.unitP1
+        case 1:
+            return theme.unitP2
+        case 2:
+            return theme.unitP3
+        case 3:
+            return theme.unitP4
+        default:
+            return theme.unitP1
         }
     }
 
-    // ✅ ikonka podle typu jednotky/budovy
-    function iconForType(t) {
-        switch (t) {
-        case UnitType.Stronghold:      return "🏰"
-        case UnitType.Barracks:        return "🏯"
-        case UnitType.Stables:         return "🏇"
-        case UnitType.Bank:            return "🏦"
-        case UnitType.Church:          return "⛪"
-
-        // jednotky
-        case UnitType.Warrior:         return "⚔️"
-        case UnitType.Archer:          return "🏹"
-        case UnitType.Cavalry:         return "🐴"
-        case UnitType.Priest:          return "🧙"
-
-        // obléhání
-        case UnitType.Ram:             return "🪓"
-        case UnitType.SiegeWorkshop:   return "🏗️"
-
-        default:                       return "❓"
-        }
-    }
-
-    // ===== Visual =====
     color: colorForOwner(unitModel ? unitModel.ownerId : 0)
 
     border.width: (unitModel && unitModel.unitSelected) ? 3 : 2
-    border.color: (unitModel && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
+    border.color: (unitModel
+                   && unitModel.unitSelected) ? theme.unitSelectedBorder : theme.unitBorder
 
     opacity: unitModel && unitModel.health <= 0 ? 0 : 1
 
-    // --- ICON OVERLAY ---
+    // Icon overlay
     Text {
         id: unitIcon
         anchors.centerIn: parent
-        text: unitModel ? iconForType(unitModel.unitType) : ""
+        text: unitModel ? unitInfo.getInfo(unitModel.unitType).icon : ""
         font.pixelSize: Math.floor(tileSize * 0.62)
         scale: unitModel && unitModel.isBuilding ? 0.92 : 1.0
         z: 24
@@ -90,13 +74,33 @@ Rectangle {
     SequentialAnimation {
         id: moveAnim
         ParallelAnimation {
-            PropertyAnimation { target: moveGlow; property: "opacity"; to: 0.60; duration: 90 }
+            PropertyAnimation {
+                target: moveGlow
+                property: "opacity"
+                to: 0.60
+                duration: 90
+            }
             SequentialAnimation {
-                PropertyAnimation { target: root; property: "scale"; to: 1.18; duration: 90 }
-                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 140 }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.18
+                    duration: 90
+                }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.00
+                    duration: 140
+                }
             }
         }
-        PropertyAnimation { target: moveGlow; property: "opacity"; to: 0.00; duration: 220 }
+        PropertyAnimation {
+            target: moveGlow
+            property: "opacity"
+            to: 0.00
+            duration: 220
+        }
     }
 
     // Hit Animation
@@ -112,14 +116,39 @@ Rectangle {
     SequentialAnimation {
         id: hitAnim
         ParallelAnimation {
-            PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.75; duration: 70 }
+            PropertyAnimation {
+                target: hitFlash
+                property: "opacity"
+                to: 0.75
+                duration: 70
+            }
             SequentialAnimation {
-                PropertyAnimation { target: root; property: "scale"; to: 0.92; duration: 60 }
-                PropertyAnimation { target: root; property: "scale"; to: 1.08; duration: 70 }
-                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 90 }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 0.92
+                    duration: 60
+                }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.08
+                    duration: 70
+                }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.00
+                    duration: 90
+                }
             }
         }
-        PropertyAnimation { target: hitFlash; property: "opacity"; to: 0.00; duration: 220 }
+        PropertyAnimation {
+            target: hitFlash
+            property: "opacity"
+            to: 0.00
+            duration: 220
+        }
     }
 
     // Heal Animation (jemný flash)
@@ -135,24 +164,47 @@ Rectangle {
     SequentialAnimation {
         id: healAnim
         ParallelAnimation {
-            PropertyAnimation { target: healFlash; property: "opacity"; to: 0.55; duration: 90 }
+            PropertyAnimation {
+                target: healFlash
+                property: "opacity"
+                to: 0.55
+                duration: 90
+            }
             SequentialAnimation {
-                PropertyAnimation { target: root; property: "scale"; to: 1.10; duration: 90 }
-                PropertyAnimation { target: root; property: "scale"; to: 1.00; duration: 140 }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.10
+                    duration: 90
+                }
+                PropertyAnimation {
+                    target: root
+                    property: "scale"
+                    to: 1.00
+                    duration: 140
+                }
             }
         }
-        PropertyAnimation { target: healFlash; property: "opacity"; to: 0.00; duration: 220 }
+        PropertyAnimation {
+            target: healFlash
+            property: "opacity"
+            to: 0.00
+            duration: 220
+        }
     }
 
     // Binding na pozici modelu
     function bindToModel() {
-        if (!mapGridObj) return
+        if (!mapGridObj)
+            return
 
         root.x = Qt.binding(function () {
-            return (unitModel && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
+            return (unitModel
+                    && mapGridObj) ? mapGridObj.x + unitModel.position.x * tileSize : 0
         })
         root.y = Qt.binding(function () {
-            return (unitModel && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
+            return (unitModel
+                    && mapGridObj) ? mapGridObj.y + unitModel.position.y * tileSize : 0
         })
     }
 
@@ -169,7 +221,7 @@ Rectangle {
         drag.axis: Drag.XAndYAxis
 
         onPressed: {
-            // ✅ Výběr vlastní jednotky jen když nejsme v Attack/Heal módu.
+            //  Výběr vlastní jednotky jen když nejsme v Attack/Heal módu.
             // (když je aktivní Heal/Attack, chceme klikem cíl, ne přepínat selection)
             if (!isOwnerTurn)
                 return
@@ -188,11 +240,9 @@ Rectangle {
             if (!unitModel)
                 return
 
-            // ================
-            // ✅ HEAL MODE
-            // ================
+            // HEAL mode
             if (controller.action.mode === ActionMode.Heal) {
-                // klik = cíl heal (typicky spojenec)
+                // klik = cíl heal
                 let okHeal = controller.action.tryHeal(unitModel)
                 if (okHeal) {
                     healAnim.restart()
@@ -207,11 +257,9 @@ Rectangle {
                 return
             }
 
-            // ================
-            // ✅ ATTACK MODE
-            // ================
+            // ATTACK mode
             if (controller.action.mode === ActionMode.Attack) {
-                // klik = cíl útoku (typicky nepřítel)
+                // klik = cíl útoku
                 let okAtk = controller.action.tryAttack(unitModel)
                 if (okAtk) {
                     hitAnim.restart()
@@ -226,9 +274,7 @@ Rectangle {
                 return
             }
 
-            // ================
-            // ✅ NORMAL CLICK
-            // ================
+            // Normal click
             if (isOwnerTurn) {
                 controller.action.trySelectUnit(unitModel)
                 controller.action.mode = ActionMode.Move

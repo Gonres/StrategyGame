@@ -9,7 +9,9 @@ Item {
     width: parent ? parent.width : 1280
     height: parent ? parent.height : 720
 
-    Style.Theme { id: theme }
+    Style.Theme {
+        id: theme
+    }
 
     signal startRequested(int playerCount, int startGold)
     signal backRequested
@@ -24,7 +26,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
-        // ===== HLAVIČKA (STEJNÁ JAKO MAIN MENU) =====
+        // hlavicka
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "Strategy Game"
@@ -35,9 +37,7 @@ Item {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: step === 0
-                  ? "Kolik vás bude hrát"
-                  : "Vyberte rozpočet na hru"
+            text: step === 0 ? "Kolik vás bude hrát" : "Vyberte rozpočet na hru"
             color: theme.textSecondary
             font.pixelSize: 16
         }
@@ -48,9 +48,7 @@ Item {
             color: "transparent"
         }
 
-        // =================================================
-        // STEP 0 – VÝBĚR POČTU HRÁČŮ
-        // =================================================
+        // Vyber poctu hracu
         Column {
             visible: step === 0
             spacing: 14
@@ -86,9 +84,7 @@ Item {
             }
         }
 
-        // =================================================
-        // STEP 1 – VÝBĚR ROZPOČTU
-        // =================================================
+        // Vyber rozpoctu
         Column {
             visible: step === 1
             spacing: 14
