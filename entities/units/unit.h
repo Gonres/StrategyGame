@@ -1,6 +1,7 @@
 #ifndef UNIT_H
 #define UNIT_H
 
+#include "entities/units/unit_info.h"
 #include "entities/units/unit_type.h"
 #include <QObject>
 #include <QQmlEngine>
@@ -17,9 +18,9 @@ class Unit : public QObject
     Q_PROPERTY(int attackRange READ getAttackRange CONSTANT)
     Q_PROPERTY(bool canAttack READ canAttack CONSTANT)
     Q_PROPERTY(int movementRange READ getMovementRange CONSTANT)
-    Q_PROPERTY(int movementPoints READ getMovementPoints NOTIFY movementPointsChanged)
+    Q_PROPERTY(
+        int movementPoints READ getMovementPoints NOTIFY movementPointsChanged)
     Q_PROPERTY(bool hasAttacked READ hasAttacked NOTIFY hasAttackedChanged)
-    Q_PROPERTY(QString unitTypeName READ unitTypeToString CONSTANT)
     Q_PROPERTY(QPoint position READ getPosition NOTIFY positionChanged)
     Q_PROPERTY(bool unitSelected READ isUnitSelected NOTIFY unitSelectedChanged)
     Q_PROPERTY(bool isBuilding READ isBuilding CONSTANT)
@@ -27,8 +28,8 @@ class Unit : public QObject
 
 protected:
     // Normal movable unit
-    Unit(UnitType::Type type, int maxHealth, int attackDamage,
-         int attackRange, int movementRange, QPoint position, QObject *parent);
+    Unit(UnitType::Type type, int maxHealth, int attackDamage, int attackRange,
+         int movementRange, QPoint position, QObject *parent);
 
     // Non movable building
     Unit(UnitType::Type type, int maxHealth, QPoint position, QObject *parent);
@@ -49,19 +50,17 @@ public:
     bool hasAttacked() const;
     bool isBuilding() const;
     int ownerId() const;
-    QString unitTypeToString() const;
-
-    virtual bool canAttack() const;
 
     void setHealth(int newHealth);
     void setPosition(QPoint position);
     void setUnitSelected(bool selected);
     void setOwnerId(int ownerId);
 
+    void attack(Unit *target);
+
+    virtual bool canAttack() const;
 
     virtual int damageAgainst(const Unit *target) const;
-
-    void attack(Unit *target);
 
     Q_INVOKABLE void resetMovement();
     Q_INVOKABLE bool spendMovement(int cost);

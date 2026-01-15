@@ -26,6 +26,7 @@ qt_add_qml_module(appStrategyGame
         qml/components/GameMap.qml
         qml/components/UnitList.qml
         qml/components/UnitPiece.qml
+        qml/components/BuyUnitButton.qml
 
         qml/screens/MainMenu.qml
         qml/screens/NewGameMenu.qml
@@ -48,6 +49,7 @@ qt_add_qml_module(appStrategyGame
 
         # --- units ---
         entities/units/unit_type.h
+        entities/units/unit_info.h
         entities/units/unit.h
         entities/units/unit.cpp
         entities/units/unit_repository.h

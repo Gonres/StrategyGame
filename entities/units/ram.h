@@ -6,6 +6,7 @@
 class Ram : public Unit
 {
     Q_OBJECT
+
 public:
     Ram(QPoint position, QObject *parent);
 

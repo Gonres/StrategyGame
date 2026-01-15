@@ -3,3 +3,4 @@
 SiegeWorkshop::SiegeWorkshop(QPoint position, QObject *parent)
     : Unit(UnitType::SiegeWorkshop, 150, position, parent)
 {}
+

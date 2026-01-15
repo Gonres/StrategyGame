@@ -27,9 +27,9 @@ public:
     void removeUnit(Unit *unit);
     void clearUnits();
 
-    Q_INVOKABLE void addUnit(int playerId, UnitType::Type unitType, QPoint position);
+    Q_INVOKABLE void addUnit(int playerId, UnitType::Type unitType,
+                             QPoint position);
     Q_INVOKABLE Unit *getUnitAt(QPoint position) const;
-
     Q_INVOKABLE bool canCreate(int playerId, UnitType::Type type) const;
     Q_INVOKABLE int countTypeForPlayer(int playerId, UnitType::Type type) const;
 
@@ -37,10 +37,9 @@ signals:
     void unitsChanged();
 
 private:
-    bool hasTypeForPlayer(int playerId, UnitType::Type type) const;
-
-private:
     QVector<QList<Unit *>> m_unitsByPlayer;
+
+    bool hasTypeForPlayer(int playerId, UnitType::Type type) const;
 };
 
 #endif // UNIT_REPOSITORY_H

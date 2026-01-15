@@ -11,4 +11,5 @@ class Stables : public Unit
 public:
     Stables(QPoint position, QObject *parent);
 };
+
 #endif // STABLES_H
