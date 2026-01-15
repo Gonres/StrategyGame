@@ -18,9 +18,9 @@ public:
     bool trySpend(int amount);
 
 private:
-    int m_id = 0;
-    int m_gold = 0;
-    int m_incomePerTurn = 50;
+    int m_id;
+    int m_gold;
+    int m_incomePerTurn;
 };
 
 #endif // PLAYER_H
